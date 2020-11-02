@@ -1,7 +1,10 @@
 package reg
 
 type Register struct {
+	// General-purpose registers
 	GPR
+
+	// Floating Point general-purpose registers
 	FGR
 
 	// Program Counter
