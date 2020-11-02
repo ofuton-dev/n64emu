@@ -9,7 +9,7 @@ func TestAssert_Debug(t *testing.T) {
 	t.Run("NoPanic", func(t *testing.T) {
 		Assert(true, "")
 	})
-	t.Run("NoPanic", func(t *testing.T) {
+	t.Run("Panic", func(t *testing.T) {
 		defer func() {
 			err := recover()
 			if err != "assert message" {
@@ -25,7 +25,7 @@ func TestAssertEq_Debug(t *testing.T) {
 	t.Run("NoPanic", func(t *testing.T) {
 		AssertEq(0, 0, "")
 	})
-	t.Run("NoPanic", func(t *testing.T) {
+	t.Run("Panic", func(t *testing.T) {
 		defer func() {
 			err := recover()
 			if err != "assert message" {
@@ -41,7 +41,7 @@ func TestAssertNe_Debug(t *testing.T) {
 	t.Run("NoPanic", func(t *testing.T) {
 		AssertNe(0, 1, "")
 	})
-	t.Run("NoPanic", func(t *testing.T) {
+	t.Run("Panic", func(t *testing.T) {
 		defer func() {
 			err := recover()
 			if err != "assert message" {
