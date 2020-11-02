@@ -59,17 +59,17 @@ type InstR struct {
 // Decode I-Type Instruction
 func DecodeI(src uint32) InstI {
 	return InstI{
-		Opcode:    (src >> 26) & 0x3f,
-		Rs:        (src >> 21) & 0x1f,
-		Rt:        (src >> 16) & 0x1f,
-		Immediate: (src >> 0) & 0xffff,
+		Opcode:    uint8((src >> 26) & 0x3f),
+		Rs:        uint8((src >> 21) & 0x1f),
+		Rt:        uint8((src >> 16) & 0x1f),
+		Immediate: uint16((src >> 0) & 0xffff),
 	}
 }
 
 // Decode J-Type Instruction
 func DecodeJ(src uint32) InstJ {
 	return InstJ{
-		Opcode:  (src >> 26) & 0x3f,
+		Opcode:  uint8((src >> 26) & 0x3f),
 		Address: (src >> 0) & 0x03ff_ffff,
 	}
 }
@@ -77,10 +77,10 @@ func DecodeJ(src uint32) InstJ {
 // Decode R-Type Instruction
 func DecodeR(src uint32) InstR {
 	return InstR{
-		Opcode: (src >> 26) & 0x3f,
-		Rs:     (src >> 21) & 0x1f,
-		Rt:     (src >> 16) & 0x1f,
-		Sa:     (src >> 6) & 0x1f,
-		Funct:  (src >> 0) & 0x3f,
+		Opcode: uint8((src >> 26) & 0x3f),
+		Rs:     uint8((src >> 21) & 0x1f),
+		Rt:     uint8((src >> 16) & 0x1f),
+		Sa:     uint8((src >> 6) & 0x1f),
+		Funct:  uint8((src >> 0) & 0x3f),
 	}
 }
