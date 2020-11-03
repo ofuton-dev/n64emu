@@ -12,10 +12,11 @@ const (
 // Bus is interface of bus accessor
 type Bus interface {
 	WriteByte(e Endianness, addr types.Word, data types.Byte)
-	WriteHalfWord(e Endianness, addr, data types.Word)
+	WriteHalfWord(e Endianness, addr, data types.HalfWord)
 	WriteWord(e Endianness, addr types.Word, data types.Word)
-	ReadByte(e Endianness, addr types.Word) byte
-	ReadHalfWord(e Endianness, addr types.Word) types.Word
+	WriteDoubleWord(e Endianness, addr types.Word, data types.DoubleWord)
+	ReadByte(e Endianness, addr types.Word) types.Byte
+	ReadHalfWord(e Endianness, addr types.Word) types.HalfWord
 	ReadWord(e Endianness, addr types.Word) types.Word
-	ReadDoubleWord(e Endianness, addr types.Word) types.Word
+	ReadDoubleWord(e Endianness, addr types.Word) types.DoubleWord
 }
