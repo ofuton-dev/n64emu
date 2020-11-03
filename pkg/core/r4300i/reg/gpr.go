@@ -40,27 +40,27 @@ Register map:
 package reg
 
 const (
-	NumOfRegs = 32
+	NumOfRegsInGpr = 32
 )
 
 // General Purpose Register
 type GPR struct {
 	// registers (r[0] is not used because it is always zero.)
-	r [NumOfRegs]uint64
+	r [NumOfRegsInGpr]uint64
 }
 
 // Read value of the register.
-func (gpr *GPR) read(index int) uint64 {
+func (gpr *GPR) Read(index int) uint64 {
 	if index == 0 {
 		return 0
 	} else {
-		return r[index]
+		return gpr.r[index]
 	}
 }
 
 // Write value in register
-func (gpr *GPR) write(index int, value uint64) {
+func (gpr *GPR) Write(index int, value uint64) {
 	if index != 0 {
-		r[index] = value
+		gpr.r[index] = value
 	}
 }

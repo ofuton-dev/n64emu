@@ -40,21 +40,21 @@ Register map:
 package reg
 
 const (
-	NumOfRegs = 32
+	NumOfRegsInFgr = 32
 )
 
 // Floating Point General Purpose Register
 type FGR struct {
 	// registers
-	f [NumOfRegs]float64
+	f [NumOfRegsInFgr]float64
 }
 
 // Read value of the register.
-func (fgr *FGR) read(index int) float64 {
-	return r[index]
+func (fgr *FGR) Read(index int) float64 {
+	return fgr.f[index]
 }
 
 // Write value in register
-func (fgr *FGR) write(index int, value float64) float64 {
-	r[index] = value
+func (fgr *FGR) Write(index int, value float64) {
+	fgr.f[index] = value
 }
