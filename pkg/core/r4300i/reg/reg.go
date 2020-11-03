@@ -4,8 +4,8 @@ type Register struct {
 	// General-purpose registers
 	GPR
 
-	// Floating Point general-purpose registers
-	FGR
+	// Floating Point operation registers
+	FPR
 
 	// System Control Coprocessor(CP0) Register
 	CP0

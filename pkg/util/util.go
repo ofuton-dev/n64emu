@@ -19,3 +19,7 @@ func Contains(list interface{}, target interface{}) bool {
 	}
 	return false
 }
+
+func TODO(message string) {
+	panic("TODO: " + message)
+}

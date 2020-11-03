@@ -1,6 +1,6 @@
 /*
 
-Floating Point General Purpose Register(FGR) are reserved for floating point operations
+Floating Point General Purpose Register(FPR) are reserved for floating point operations
 
 Register map:
 	F0 :  register reserved for floating point operations
@@ -40,21 +40,28 @@ Register map:
 package reg
 
 const (
-	NumOfRegsInFgr = 32
+	NumOfRegsInFpr = 32
 )
 
-// Floating Point General Purpose Register
-type FGR struct {
+// FPR is Floating Point Operation Register
+type FPR struct {
 	// registers
-	f [NumOfRegsInFgr]float64
+	f [NumOfRegsInFpr]float64
+}
+
+// NewFGR is FPR constructor
+func NewFGR() FPR {
+	return FPR{
+		f: [NumOfRegsInFpr]float64{},
+	}
 }
 
 // Read value of the register.
-func (fgr *FGR) Read(index int) float64 {
+func (fgr *FPR) Read(index int) float64 {
 	return fgr.f[index]
 }
 
 // Write value in register
-func (fgr *FGR) Write(index int, value float64) {
+func (fgr *FPR) Write(index int, value float64) {
 	fgr.f[index] = value
 }
