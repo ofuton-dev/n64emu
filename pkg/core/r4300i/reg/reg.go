@@ -7,6 +7,9 @@ type Register struct {
 	// Floating Point general-purpose registers
 	FGR
 
+	// System Control Coprocessor(CP0) Register
+	CP0
+
 	// Program Counter
 	PC uint64
 
