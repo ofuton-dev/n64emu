@@ -53,15 +53,15 @@ type MediaFormatFirstByte byte
 
 const (
 	// Cartridge
-	Cart MediaFormat = 'N'
+	Cart MediaFormatFirstByte = 'N'
 	// 64DD
-	Dd MediaFormat = 'D'
+	Dd MediaFormatFirstByte = 'D'
 	// cartridge part of expandable game
-	CartEx MediaFormat = 'C'
+	CartEx MediaFormatFirstByte = 'C'
 	// 64DD expansion for cart
-	DdEx MediaFormat = 'E'
+	DdEx MediaFormatFirstByte = 'E'
 	// Aleck64 Cartridge
-	ACart MediaFormat = 'Z'
+	ACart MediaFormatFirstByte = 'Z'
 )
 
 type CountryCode byte
@@ -85,8 +85,8 @@ const (
 	Spanish      CountryCode = 0x53
 	Australian   CountryCode = 0x55
 	Scandinavian CountryCode = 0x57
-	European1    CountryCode = 0x58
-	European2    CountryCode = 0x59
+	EuropeanX    CountryCode = 0x58
+	EuropeanY    CountryCode = 0x59
 )
 
 type Rom struct {
@@ -112,8 +112,8 @@ type Rom struct {
 	CountryCode CountryCode
 	// 0x3f, 1 byte
 	Version byte
-	// 0x40, 4032 bytes
-	BootCode [BootCodeSize]byte
+	// 0x40, 4032 bytes(BootCodeSize)
+	BootCode []byte
 	// 0x1000 ~ File End
 	Data []byte
 }
@@ -134,7 +134,7 @@ func convertByteSwapped(src *[]byte) error {
 	loopCount := len(*src) / 2
 	for i := 0; i < loopCount; i++ {
 		index := i * 2
-		swap(*src[index], *src[index+1])
+		swap(&(*src)[index], &(*src)[index+1])
 	}
 
 	return nil
@@ -149,8 +149,8 @@ func convertLittle(src *[]byte) error {
 	loopCount := len(*src) / 4
 	for i := 0; i < loopCount; i++ {
 		index := i * 4
-		swap(*src[index], *src[index+3])
-		swap(*src[index+1], *src[index+2])
+		swap(&(*src)[index], &(*src)[index+3])
+		swap(&(*src)[index+1], &(*src)[index+2])
 	}
 
 	return nil
@@ -162,7 +162,7 @@ func repairOrder(src *[]byte) error {
 		return errors.New("The size is less than 4 bytes")
 	}
 
-	header := (uint32(*src[0]) << 24) | (uint32(*src[1]) << 16) | (uint32(*src[2]) << 8) | (uint32(*src[3]) << 0)
+	header := (uint32((*src)[0]) << 24) | (uint32((*src)[1]) << 16) | (uint32((*src)[2]) << 8) | (uint32((*src)[3]) << 0)
 	switch header {
 	case RomHeaderBigEndian:
 		break
@@ -188,6 +188,12 @@ func repairOrder(src *[]byte) error {
 		return errors.New("Invalid Header")
 	}
 
+	return nil
+}
+
+// Check CRC
+func (rom *Rom) checkCrc() error {
+	// TODO: Implement here
 	return nil
 }
 
@@ -218,7 +224,7 @@ func NewRom(romPath string) (Rom, error) {
 	}
 
 	// Detect identifier. repair rom endian and byte-swapped.
-	if err := repairOrder(src); err != nil {
+	if err := repairOrder(&src); err != nil {
 		return dst, err
 	}
 
@@ -231,14 +237,16 @@ func NewRom(romPath string) (Rom, error) {
 	dst.ImageName = string(src[0x20 : 0x20+ImageNameSize]) // 0x20 ~ 0x34
 	dst.MediaFormat = (uint32(src[0x38]) << 24) | (uint32(src[0x39]) << 16) | (uint32(src[0x3a]) << 8) | (uint32(src[0x3b]) << 0)
 	dst.CartridgeId = (uint16(src[0x3c]) << 8) | (uint16(src[0x3d]) << 0)
-	dst.CountryCode = uint8(src[0x3e])
-	dst.Version = uint8(src[0x3f])
+	dst.CountryCode = CountryCode(src[0x3e])
+	dst.Version = byte(src[0x3f])
 	dst.BootCode = src[0x40 : 0x40+BootCodeSize] // 0x40 ~ 0x1000
 	dst.Data = src[RomHeaderSize:]               // 0x1000 ~ File End
 
 	// CRC Check
 	// If the check fails, the data may still be usable, so set up the data and then perform the CRC check.
-	// TODO: impl here
+	if err := dst.checkCrc(); err != nil {
+		return dst, err
+	}
 
 	// done.
 	return dst, nil
