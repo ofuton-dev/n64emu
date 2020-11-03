@@ -1,11 +1,36 @@
 /*
 .N64 .Z64 ROM Reader
+http://en64.shoutwiki.com/wiki/ROM#Cartridge_ROM_Header
+
+Cartridge ROM Header format:
+	Offset Bytes  Explanation
+	0x00   x	  indicator for endianness (nybble)*
+	0x01   x	  initial PI_BSB_DOM1_LAT_REG (nybble)*
+	0x01   x	  initial PI_BSD_DOM1_PGS_REG (nybble)*
+	0x02   1	  initial PI_BSD_DOM1_PWD_REG*
+	0x03   1	  initial PI_BSB_DOM1_PGS_REG*
+	0x04   4	  ClockRate Override(0 uses default)*
+	0x08   4	  Program Counter*
+	0x0C   4	  Release Address
+	0x10   4	  CRC1 (checksum)
+	0x14   4	  CRC2
+	0x18   8	  Unknown/Not used
+	0x20   20	  Image Name/Internal name*
+	0x34   4	  Unknown/Not used
+	0x38   4	  Media format
+	0x3C   2	  Cartridge ID (alphanumeric)
+	0x3E   1	  Country Code
+	0x3F   1	  Version
+	0x40   4032	  Boot code/strap
+
 */
 
 package rom
 
 import (
 	"errors"
+	"io/ioutil"
+	"os"
 )
 
 const (
@@ -18,7 +43,36 @@ const (
 	RomHeaderLittleEndianByteSwapped = 0x12408037
 )
 
+const (
+	BootCodeSize  = 4032
+	RomHeaderSize = 0x1000
+)
+
 type Rom struct {
+	// filepath
+	RomPath string
+	// 0x04, 4 bytes
+	ClockRateOverride uint32
+	// 0x08, 4 bytes
+	ProgramCounter uint32
+	// 0x0c, 4 bytes
+	ReleaseAddress uint32
+	// 0x10, 4 bytes
+	Crc1 uint32
+	// 0x14, 4 bytes
+	Crc2 uint32
+	// 0x20, 20 bytes
+	ImageName string
+	// 0x38, 4 bytes
+	MediaFormat uint32
+	// 0x3c, 2 bytes
+	CartridgeId uint16
+	// 0x3e, 1 byte
+	CountryCode byte
+	// 0x3f, 1 byte
+	Version byte
+	// 0x40, 4032 bytes
+	BootCode [BootCodeSize]byte
 }
 
 // Swap the values of A and B.
@@ -86,4 +140,36 @@ func repairOrder(src *[]byte) error {
 	default:
 		return errors.New("Invalid Header")
 	}
+}
+
+// Read from ROM file
+func NewRom(romPath string) (Rom, error) {
+	// file check
+	info, err := os.Stat(romPath)
+	// file not found
+	if os.IsNotExist(err) {
+		return Rom{}, err
+	}
+	// not file
+	if info.IsDir() {
+		return Rom{}, errors.New("romPath is directory")
+	}
+	// No data for the ROM Header
+	if info.Size() < RomHeaderSize {
+		return Rom{}, errors.New("The size is less than 4096 bytes")
+	}
+
+	// read from file
+	src, err := ioutil.ReadFile(romPath)
+	if err != nil {
+		return Rom{}, err
+	}
+
+	// detect identifier. repair rom endian and byte-swapped.
+	if err := repairOrder(src); err != nil {
+		return Rom{}, err
+	}
+
+	// parse cartridge rom header
+
 }
