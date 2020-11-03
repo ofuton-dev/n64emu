@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWriteRead(t *testing.T) {
+func TestGPR_WriteRead(t *testing.T) {
 	testData := uint64(0xaa995566_33ccbbdd)
 
 	for i := 0; i < NumOfRegsInGpr; i++ {
