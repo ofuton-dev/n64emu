@@ -1,5 +1,5 @@
 /*
-.N64 .Z64 ROM Reader
+ROM Reader
 http://en64.shoutwiki.com/wiki/ROM#Cartridge_ROM_Header
 
 Cartridge ROM Header format:
