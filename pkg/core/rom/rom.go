@@ -44,8 +44,49 @@ const (
 )
 
 const (
+	ImageNameSize = 20
 	BootCodeSize  = 4032
 	RomHeaderSize = 0x1000
+)
+
+type MediaFormatFirstByte byte
+
+const (
+	// Cartridge
+	Cart MediaFormat = 'N'
+	// 64DD
+	Dd MediaFormat = 'D'
+	// cartridge part of expandable game
+	CartEx MediaFormat = 'C'
+	// 64DD expansion for cart
+	DdEx MediaFormat = 'E'
+	// Aleck64 Cartridge
+	ACart MediaFormat = 'Z'
+)
+
+type CountryCode byte
+
+const (
+	Beta         CountryCode = 0x37
+	Asian        CountryCode = 0x41
+	Brazillian   CountryCode = 0x42
+	Chinese      CountryCode = 0x43
+	German       CountryCode = 0x44
+	NorthAmerica CountryCode = 0x45
+	French       CountryCode = 0x46
+	GatewayNtsc  CountryCode = 0x47
+	Dutch        CountryCode = 0x48
+	Italian      CountryCode = 0x49
+	Japanese     CountryCode = 0x4a
+	Korean       CountryCode = 0x4b
+	GatewayPal   CountryCode = 0x4c
+	Canadian     CountryCode = 0x4e
+	European     CountryCode = 0x50
+	Spanish      CountryCode = 0x53
+	Australian   CountryCode = 0x55
+	Scandinavian CountryCode = 0x57
+	European1    CountryCode = 0x58
+	European2    CountryCode = 0x59
 )
 
 type Rom struct {
@@ -68,11 +109,13 @@ type Rom struct {
 	// 0x3c, 2 bytes
 	CartridgeId uint16
 	// 0x3e, 1 byte
-	CountryCode byte
+	CountryCode CountryCode
 	// 0x3f, 1 byte
 	Version byte
 	// 0x40, 4032 bytes
 	BootCode [BootCodeSize]byte
+	// 0x1000 ~ File End
+	Data []byte
 }
 
 // Swap the values of A and B.
@@ -93,6 +136,8 @@ func convertByteSwapped(src *[]byte) error {
 		index := i * 2
 		swap(*src[index], *src[index+1])
 	}
+
+	return nil
 }
 
 // Convert little-endian arrays to big-endian arrays
@@ -107,6 +152,8 @@ func convertLittle(src *[]byte) error {
 		swap(*src[index], *src[index+3])
 		swap(*src[index+1], *src[index+2])
 	}
+
+	return nil
 }
 
 // Repairing array order
@@ -140,36 +187,59 @@ func repairOrder(src *[]byte) error {
 	default:
 		return errors.New("Invalid Header")
 	}
+
+	return nil
 }
 
 // Read from ROM file
 func NewRom(romPath string) (Rom, error) {
-	// file check
+	dst := Rom{
+		RomPath: romPath,
+	}
+	// Check file
 	info, err := os.Stat(romPath)
-	// file not found
+	// not found
 	if os.IsNotExist(err) {
-		return Rom{}, err
+		return dst, err
 	}
 	// not file
 	if info.IsDir() {
-		return Rom{}, errors.New("romPath is directory")
+		return dst, errors.New("romPath is directory")
 	}
 	// No data for the ROM Header
 	if info.Size() < RomHeaderSize {
-		return Rom{}, errors.New("The size is less than 4096 bytes")
+		return dst, errors.New("The size is less than 4096 bytes")
 	}
 
-	// read from file
+	// Read from file
 	src, err := ioutil.ReadFile(romPath)
 	if err != nil {
-		return Rom{}, err
+		return dst, err
 	}
 
-	// detect identifier. repair rom endian and byte-swapped.
+	// Detect identifier. repair rom endian and byte-swapped.
 	if err := repairOrder(src); err != nil {
-		return Rom{}, err
+		return dst, err
 	}
 
-	// parse cartridge rom header
+	// Parse cartridge rom header and data
+	dst.ClockRateOverride = (uint32(src[0x04]) << 24) | (uint32(src[0x05]) << 16) | (uint32(src[0x06]) << 8) | (uint32(src[0x07]) << 0)
+	dst.ProgramCounter = (uint32(src[0x08]) << 24) | (uint32(src[0x09]) << 16) | (uint32(src[0x0a]) << 8) | (uint32(src[0x0b]) << 0)
+	dst.ReleaseAddress = (uint32(src[0x0c]) << 24) | (uint32(src[0x0d]) << 16) | (uint32(src[0x0e]) << 8) | (uint32(src[0x0f]) << 0)
+	dst.Crc1 = (uint32(src[0x10]) << 24) | (uint32(src[0x11]) << 16) | (uint32(src[0x12]) << 8) | (uint32(src[0x13]) << 0)
+	dst.Crc2 = (uint32(src[0x14]) << 24) | (uint32(src[0x15]) << 16) | (uint32(src[0x16]) << 8) | (uint32(src[0x17]) << 0)
+	dst.ImageName = string(src[0x20 : 0x20+ImageNameSize]) // 0x20 ~ 0x34
+	dst.MediaFormat = (uint32(src[0x38]) << 24) | (uint32(src[0x39]) << 16) | (uint32(src[0x3a]) << 8) | (uint32(src[0x3b]) << 0)
+	dst.CartridgeId = (uint16(src[0x3c]) << 8) | (uint16(src[0x3d]) << 0)
+	dst.CountryCode = uint8(src[0x3e])
+	dst.Version = uint8(src[0x3f])
+	dst.BootCode = src[0x40 : 0x40+BootCodeSize] // 0x40 ~ 0x1000
+	dst.Data = src[RomHeaderSize:]               // 0x1000 ~ File End
 
+	// CRC Check
+	// If the check fails, the data may still be usable, so set up the data and then perform the CRC check.
+	// TODO: impl here
+
+	// done.
+	return dst, nil
 }
