@@ -3,6 +3,8 @@ package inst
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDeocdeI(t *testing.T) {
@@ -26,9 +28,8 @@ func TestDeocdeI(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprint(tt), func(t *testing.T) {
-			if got := DecodeI(tt.src); got != tt.want {
-				t.Fatalf("want = %v, got = %v", tt.want, got)
-			}
+			got := DecodeI(tt.src)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -54,9 +55,8 @@ func TestDeocdeJ(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprint(tt), func(t *testing.T) {
-			if got := DecodeJ(tt.src); got != tt.want {
-				t.Fatalf("want = %v, got = %v", tt.want, got)
-			}
+			got := DecodeJ(tt.src)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -82,9 +82,8 @@ func TestDeocdeR(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprint(tt), func(t *testing.T) {
-			if got := DecodeR(tt.src); got != tt.want {
-				t.Fatalf("want = %v, got = %v", tt.want, got)
-			}
+			got := DecodeR(tt.src)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
