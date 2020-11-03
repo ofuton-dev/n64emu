@@ -1,8 +1,14 @@
 package reg
 
 type Register struct {
+	// General-purpose registers
 	GPR
+
+	// Floating Point general-purpose registers
 	FGR
+
+	// System Control Coprocessor(CP0) Register
+	CP0
 
 	// Program Counter
 	PC uint64
