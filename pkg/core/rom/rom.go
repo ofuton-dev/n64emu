@@ -30,7 +30,9 @@ package rom
 import (
 	"errors"
 	"io/ioutil"
+	"n64emu/pkg/types"
 	"os"
+	"unsafe"
 )
 
 const (
@@ -93,40 +95,40 @@ type Rom struct {
 	// filepath
 	RomPath string
 	// 0x04, 4 bytes
-	ClockRateOverride uint32
+	ClockRateOverride types.Word
 	// 0x08, 4 bytes
-	ProgramCounter uint32
+	ProgramCounter types.Word
 	// 0x0c, 4 bytes
-	ReleaseAddress uint32
+	ReleaseAddress types.Word
 	// 0x10, 4 bytes
-	Crc1 uint32
+	Crc1 types.Word
 	// 0x14, 4 bytes
-	Crc2 uint32
+	Crc2 types.Word
 	// 0x20, 20 bytes
 	ImageName string
 	// 0x38, 4 bytes
-	MediaFormat uint32
+	MediaFormat types.Word
 	// 0x3c, 2 bytes
-	CartridgeId uint16
+	CartridgeId types.HalfWord
 	// 0x3e, 1 byte
 	CountryCode CountryCode
 	// 0x3f, 1 byte
-	Version byte
+	Version types.Byte
 	// 0x40, 4032 bytes(BootCodeSize)
-	BootCode []byte
+	BootCode []types.Byte
 	// 0x1000 ~ File End
-	Data []byte
+	Data []types.Byte
 }
 
 // Swap the values of A and B.
-func swap(a *byte, b *byte) {
+func swap(a *types.Byte, b *types.Byte) {
 	tmp := *a
 	*a = *b
 	*b = tmp
 }
 
 // Restore a byte-swapped array
-func convertByteSwapped(src []byte) error {
+func convertByteSwapped(src []types.Byte) error {
 	if len(src)%2 != 0 {
 		return errors.New("ROM size not divisible by two")
 	}
@@ -141,7 +143,7 @@ func convertByteSwapped(src []byte) error {
 }
 
 // Convert little-endian arrays to big-endian arrays
-func convertLittle(src []byte) error {
+func convertLittle(src []types.Byte) error {
 	if len(src)%4 != 0 {
 		return errors.New("ROM size not divisible by four")
 	}
@@ -157,12 +159,12 @@ func convertLittle(src []byte) error {
 }
 
 // Repairing array order
-func repairOrder(src []byte) error {
+func repairOrder(src []types.Byte) error {
 	if len(src) < 4 {
 		return errors.New("The size is less than 4 bytes")
 	}
 
-	header := (uint32(src[0]) << 24) | (uint32(src[1]) << 16) | (uint32(src[2]) << 8) | (uint32(src[3]) << 0)
+	header := (types.Word(src[0]) << 24) | (types.Word(src[1]) << 16) | (types.Word(src[2]) << 8) | (types.Word(src[3]) << 0)
 	switch header {
 	case RomHeaderBigEndian:
 		break
@@ -218,10 +220,11 @@ func NewRom(romPath string) (Rom, error) {
 	}
 
 	// Read from file
-	src, err := ioutil.ReadFile(romPath)
+	byteArr, err := ioutil.ReadFile(romPath)
 	if err != nil {
 		return dst, err
 	}
+	src := *(*[]types.Byte)(unsafe.Pointer(&byteArr)) // same type
 
 	// Detect identifier. repair rom endian and byte-swapped.
 	if err := repairOrder(src); err != nil {
@@ -229,16 +232,16 @@ func NewRom(romPath string) (Rom, error) {
 	}
 
 	// Parse cartridge rom header and data
-	dst.ClockRateOverride = (uint32(src[0x04]) << 24) | (uint32(src[0x05]) << 16) | (uint32(src[0x06]) << 8) | (uint32(src[0x07]) << 0)
-	dst.ProgramCounter = (uint32(src[0x08]) << 24) | (uint32(src[0x09]) << 16) | (uint32(src[0x0a]) << 8) | (uint32(src[0x0b]) << 0)
-	dst.ReleaseAddress = (uint32(src[0x0c]) << 24) | (uint32(src[0x0d]) << 16) | (uint32(src[0x0e]) << 8) | (uint32(src[0x0f]) << 0)
-	dst.Crc1 = (uint32(src[0x10]) << 24) | (uint32(src[0x11]) << 16) | (uint32(src[0x12]) << 8) | (uint32(src[0x13]) << 0)
-	dst.Crc2 = (uint32(src[0x14]) << 24) | (uint32(src[0x15]) << 16) | (uint32(src[0x16]) << 8) | (uint32(src[0x17]) << 0)
-	dst.ImageName = string(src[0x20 : 0x20+ImageNameSize]) // 0x20 ~ 0x34
-	dst.MediaFormat = (uint32(src[0x38]) << 24) | (uint32(src[0x39]) << 16) | (uint32(src[0x3a]) << 8) | (uint32(src[0x3b]) << 0)
-	dst.CartridgeId = (uint16(src[0x3c]) << 8) | (uint16(src[0x3d]) << 0)
+	dst.ClockRateOverride = (types.Word(src[0x04]) << 24) | (types.Word(src[0x05]) << 16) | (types.Word(src[0x06]) << 8) | (types.Word(src[0x07]) << 0)
+	dst.ProgramCounter = (types.Word(src[0x08]) << 24) | (types.Word(src[0x09]) << 16) | (types.Word(src[0x0a]) << 8) | (types.Word(src[0x0b]) << 0)
+	dst.ReleaseAddress = (types.Word(src[0x0c]) << 24) | (types.Word(src[0x0d]) << 16) | (types.Word(src[0x0e]) << 8) | (types.Word(src[0x0f]) << 0)
+	dst.Crc1 = (types.Word(src[0x10]) << 24) | (types.Word(src[0x11]) << 16) | (types.Word(src[0x12]) << 8) | (types.Word(src[0x13]) << 0)
+	dst.Crc2 = (types.Word(src[0x14]) << 24) | (types.Word(src[0x15]) << 16) | (types.Word(src[0x16]) << 8) | (types.Word(src[0x17]) << 0)
+	dst.ImageName = string(byteArr[0x20 : 0x20+ImageNameSize]) // 0x20 ~ 0x34
+	dst.MediaFormat = (types.Word(src[0x38]) << 24) | (types.Word(src[0x39]) << 16) | (types.Word(src[0x3a]) << 8) | (types.Word(src[0x3b]) << 0)
+	dst.CartridgeId = (types.HalfWord(src[0x3c]) << 8) | (types.HalfWord(src[0x3d]) << 0)
 	dst.CountryCode = CountryCode(src[0x3e])
-	dst.Version = byte(src[0x3f])
+	dst.Version = types.Byte(src[0x3f])
 	dst.BootCode = src[0x40 : 0x40+BootCodeSize] // 0x40 ~ 0x1000
 	dst.Data = src[RomHeaderSize:]               // 0x1000 ~ File End
 
