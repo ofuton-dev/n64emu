@@ -2,6 +2,7 @@ package inst
 
 import (
 	"fmt"
+	"n64emu/pkg/types"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,7 @@ import (
 
 func TestDeocdeI(t *testing.T) {
 	tests := []struct {
-		src  uint32
+		src  types.Word
 		want InstI
 	}{
 		{
@@ -36,7 +37,7 @@ func TestDeocdeI(t *testing.T) {
 
 func TestDeocdeJ(t *testing.T) {
 	tests := []struct {
-		src  uint32
+		src  types.Word
 		want InstJ
 	}{
 		{
@@ -63,7 +64,7 @@ func TestDeocdeJ(t *testing.T) {
 
 func TestDeocdeR(t *testing.T) {
 	tests := []struct {
-		src  uint32
+		src  types.Word
 		want InstR
 	}{
 		{
@@ -75,7 +76,7 @@ func TestDeocdeR(t *testing.T) {
 		{
 			src: 0xffff_ffff,
 			want: InstR{
-				Opcode: 0b11_1111, Rs: 0b1_1111, Rt: 0b1_1111, Sa: 0b1_1111, Funct: 0b11_1111,
+				Opcode: 0b11_1111, Rs: 0b1_1111, Rt: 0b1_1111, Rd: 0b1_1111, Sa: 0b1_1111, Funct: 0b11_1111,
 			},
 		},
 	}

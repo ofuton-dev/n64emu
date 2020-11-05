@@ -7,16 +7,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFGR_WriteRead(t *testing.T) {
+func TestFPR_WriteRead(t *testing.T) {
 	testData := -0.1234567890
 
-	for i := 0; i < NumOfRegsInFgr; i++ {
+	for i := 0; i < NumOfRegsInFpr; i++ {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			fgr := FGR{}
+			fpr := FPR{}
 
 			// write testData and read verify
-			fgr.Write(i, testData)
-			got := fgr.Read(i)
+			fpr.Write(i, testData)
+			got := fpr.Read(i)
 
 			assert.Equal(t, testData, got)
 		})

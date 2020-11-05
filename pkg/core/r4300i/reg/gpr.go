@@ -39,6 +39,8 @@ Register map:
 
 package reg
 
+import "n64emu/pkg/types"
+
 const (
 	NumOfRegsInGpr = 32
 )
@@ -46,11 +48,18 @@ const (
 // General Purpose Register
 type GPR struct {
 	// registers (r[0] is not used because it is always zero.)
-	r [NumOfRegsInGpr]uint64
+	r [NumOfRegsInGpr]types.DoubleWord
+}
+
+// NewGPR is GPR constructor
+func NewGPR() GPR {
+	return GPR{
+		r: [NumOfRegsInGpr]types.DoubleWord{},
+	}
 }
 
 // Read value of the register.
-func (gpr *GPR) Read(index int) uint64 {
+func (gpr *GPR) Read(index types.Byte) types.DoubleWord {
 	if index == 0 {
 		return 0
 	} else {
@@ -59,7 +68,7 @@ func (gpr *GPR) Read(index int) uint64 {
 }
 
 // Write value in register
-func (gpr *GPR) Write(index int, value uint64) {
+func (gpr *GPR) Write(index types.Byte, value types.DoubleWord) {
 	if index != 0 {
 		gpr.r[index] = value
 	}
