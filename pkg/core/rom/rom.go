@@ -28,6 +28,7 @@ Cartridge ROM Header format:
 package rom
 
 import (
+	"encoding/binary"
 	"errors"
 	"io/ioutil"
 	"n64emu/pkg/types"
@@ -232,14 +233,14 @@ func NewRom(romPath string) (Rom, error) {
 	}
 
 	// Parse cartridge rom header and data
-	dst.ClockRateOverride = (types.Word(src[0x04]) << 24) | (types.Word(src[0x05]) << 16) | (types.Word(src[0x06]) << 8) | (types.Word(src[0x07]) << 0)
-	dst.ProgramCounter = (types.Word(src[0x08]) << 24) | (types.Word(src[0x09]) << 16) | (types.Word(src[0x0a]) << 8) | (types.Word(src[0x0b]) << 0)
-	dst.ReleaseAddress = (types.Word(src[0x0c]) << 24) | (types.Word(src[0x0d]) << 16) | (types.Word(src[0x0e]) << 8) | (types.Word(src[0x0f]) << 0)
-	dst.Crc1 = (types.Word(src[0x10]) << 24) | (types.Word(src[0x11]) << 16) | (types.Word(src[0x12]) << 8) | (types.Word(src[0x13]) << 0)
-	dst.Crc2 = (types.Word(src[0x14]) << 24) | (types.Word(src[0x15]) << 16) | (types.Word(src[0x16]) << 8) | (types.Word(src[0x17]) << 0)
+	dst.ClockRateOverride = types.Word(binary.BigEndian.Uint32(byteArr[0x4:0x8]))
+	dst.ProgramCounter = types.Word(binary.BigEndian.Uint32(byteArr[0x8:0xc]))
+	dst.ReleaseAddress = types.Word(binary.BigEndian.Uint32(byteArr[0xc:0x10]))
+	dst.Crc1 = types.Word(binary.BigEndian.Uint32(byteArr[0x10:0x14]))
+	dst.Crc2 = types.Word(binary.BigEndian.Uint32(byteArr[0x14:0x18]))
 	dst.ImageName = string(byteArr[0x20 : 0x20+ImageNameSize]) // 0x20 ~ 0x34
-	dst.MediaFormat = (types.Word(src[0x38]) << 24) | (types.Word(src[0x39]) << 16) | (types.Word(src[0x3a]) << 8) | (types.Word(src[0x3b]) << 0)
-	dst.CartridgeId = (types.HalfWord(src[0x3c]) << 8) | (types.HalfWord(src[0x3d]) << 0)
+	dst.MediaFormat = types.Word(binary.BigEndian.Uint32(byteArr[0x38:0x3c]))
+	dst.CartridgeId = types.HalfWord(binary.BigEndian.Uint16(byteArr[0x3c:0x3e]))
 	dst.CountryCode = CountryCode(src[0x3e])
 	dst.Version = types.Byte(src[0x3f])
 	dst.BootCode = src[0x40 : 0x40+BootCodeSize] // 0x40 ~ 0x1000

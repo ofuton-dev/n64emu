@@ -2,6 +2,7 @@ package rom
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -37,10 +38,10 @@ func TestReadRom(t *testing.T) {
 	}
 
 	// check conversion process
-	assert.Equal(t, uint32(RomHeaderBigEndian), (uint32(bigEndianSrc[0])<<24)|(uint32(bigEndianSrc[1])<<16)|(uint32(bigEndianSrc[2])<<8)|(uint32(bigEndianSrc[3])<<0))
-	assert.Equal(t, uint32(RomHeaderBigEndianByteSwapped), (uint32(bigEndianByteSwapSrc[0])<<24)|(uint32(bigEndianByteSwapSrc[1])<<16)|(uint32(bigEndianByteSwapSrc[2])<<8)|(uint32(bigEndianByteSwapSrc[3])<<0))
-	assert.Equal(t, uint32(RomHeaderLittleEndian), (uint32(littleEndianSrc[0])<<24)|(uint32(littleEndianSrc[1])<<16)|(uint32(littleEndianSrc[2])<<8)|(uint32(littleEndianSrc[3])<<0))
-	assert.Equal(t, uint32(RomHeaderLittleEndianByteSwapped), (uint32(littleEndianByteSwapSrc[0])<<24)|(uint32(littleEndianByteSwapSrc[1])<<16)|(uint32(littleEndianByteSwapSrc[2])<<8)|(uint32(littleEndianByteSwapSrc[3])<<0))
+	assert.Equal(t, uint32(RomHeaderBigEndian), binary.BigEndian.Uint32(bigEndianSrc[:4]))
+	assert.Equal(t, uint32(RomHeaderBigEndianByteSwapped), binary.BigEndian.Uint32(bigEndianByteSwapSrc[:4]))
+	assert.Equal(t, uint32(RomHeaderLittleEndian), binary.BigEndian.Uint32(littleEndianSrc[:4]))
+	assert.Equal(t, uint32(RomHeaderLittleEndianByteSwapped), binary.BigEndian.Uint32(littleEndianByteSwapSrc[:4]))
 
 	// setup tests
 	want := "ofuton-dev/n64dev   "
