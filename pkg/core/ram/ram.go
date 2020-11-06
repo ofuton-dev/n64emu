@@ -231,31 +231,31 @@ type CartDomain1 struct {
 		// NOTE: not define ROM header because ROM header info is in rom.ROM struct
 
 		// 0x10000040 to 0x10000B6F
-		RAMROMBootstrapOffset [2864]types.Byte
+		RAMROMBootstrapOffset [0xb30]types.Byte
 
 		// 0x10000B70 to 0x10000FEF
-		RAMROMFontDataOffset [1152]types.Byte
+		RAMROMFontDataOffset [0x480]types.Byte
 
 		// 0x10001000 to 0x10FF9FFF
-		RAMROMGameOffset [16748544]types.Byte
+		RAMROMGameOffset [0xff9000]types.Byte
 
 		// 0x10FFA000 to 0x10FFAFFF
-		RAMROMAppReadAddr [4096]types.Byte
+		RAMROMAppReadAddr [0x1000]types.Byte
 
 		// 0x10FFB000 to 0x10FFBFFF
-		RAMROMAppWriteAddr [4096]types.Byte
+		RAMROMAppWriteAddr [0x1000]types.Byte
 
 		// 0x10FFC000 to 0x10FFCFFF
-		RAMROMRmonReadAddr [4096]types.Byte
+		RAMROMRmonReadAddr [0x1000]types.Byte
 
 		// 0x10FFD000 to 0x10FFDFFF
-		RAMROMRmonWriteAddr [4096]types.Byte
+		RAMROMRmonWriteAddr [0x1000]types.Byte
 
 		// 0x10FFE000 to 0x10FFEFFF
-		RAMROMPrintfAddr [4096]types.Byte
+		RAMROMPrintfAddr [0x1000]types.Byte
 
 		// 0x10FFF000 to 0x10FFFFFF
-		RAMROMLogAddr [4096]types.Byte
+		RAMROMLogAddr [0x1000]types.Byte
 	}
 
 	// Address3 0x1FD00000 to 0x7FFFFFFF Unknown
