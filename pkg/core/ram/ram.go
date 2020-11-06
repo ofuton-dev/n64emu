@@ -59,24 +59,111 @@ type RAM struct {
 }
 
 // RDRAMReg RDRAM Registers 0x03F00000 to 0x03FFFFFF
+// 0x03F00000 to 0x03F00003 R/W RDRAM_CONFIG_REG or RDRAM_DEVICE_TYPE_REG
+// 0x03F00004 to 0x03F00007 R/W RDRAM_DEVICE_ID_REG
+// 0x03F00008 to 0x03F0000B R/W RDRAM_DELAY_REG
+// 0x03F0000C to 0x03F0000F R/W RDRAM_MODE_REG
+// 0x03F00010 to 0x03F00013 R/W RDRAM_REF_INTERVAL_REG
+// 0x03F00014 to 0x03F00017 R/W RDRAM_REF_ROW_REG
+// 0x03F00018 to 0x03F0001B R/W RDRAM_RAS_INTERVAL_REG
+// 0x03F0001C to 0x03F0001F R/W RDRAM_MIN_INTERVAL_REG
+// 0x03F00020 to 0x03F00023 R/W RDRAM_ADDR_SELECT_REG
+// 0x03F00024 to 0x03F00027 R/W RDRAM_DEVICE_MANUF_REG
+// 0x03F00028 to 0x03FFFFFF *   Unknown
 type RDRAMReg struct {
+	Config      types.Word
+	DeviceID    types.Word
+	Delay       types.Word
+	Mode        types.Word
+	RefInterval types.Word
+	RefRow      types.Word
+	RasInterval types.Word
+	MinInterval types.Word
+	AddrSelect  types.Word
+	DeviceManuf types.Word
 }
 
 // SPReg Signal Processor Registers 0x04000000 to 0x0400FFFF
 type SPReg struct {
+	DMem [0x1000]types.Byte
+	IMem [0x1000]types.Byte
+
+	// Master, SP memory address 0x04040000 to 0x04040003
+	MemAddr types.Word
+
+	// Slave, SP DRAM DMA address 0x04040004 to 0x04040007
+	DramAddr types.Word
+
+	// SP read DMA length 0x04040008 to 0x0404000B
+	RdLen types.Word
+
+	// SP write DMA length 0x0404000C to 0x0404000F
+	WrLen types.Word
+
+	// SP status 0x04040010 to 0x04040013
+	Status types.Word
+
+	// SP DMA full 0x04040014 to 0x04040017
+	DMAFull types.Word
+
+	// SP DMA busy 0x04040018 to 0x0404001B
+	DMABusy types.Word
+
+	// SP semaphore 0x0404001C to 0x0404001F
+	Semaphore types.Word
+
+	// SP PC 0x04080000 to 0x04080003
+	PC types.Word
+
+	// SP IMEM BIST  0x04080004 to 0x04080007
+	IBist types.Word
 }
 
 // DPCommandReg Display Processor Command Registers 0x04100000 to 0x041FFFF
-type DPCommandReg struct{}
+type DPCommandReg struct {
+	Start    types.Word
+	End      types.Word
+	Current  types.Word
+	Status   types.Word
+	Clock    types.Word
+	BufBusy  types.Word
+	PipeBusy types.Word
+	TMem     types.Word
+}
 
 // DPSpanReg Display Processor Span Registers 0x04200000 to 0x042FFFFF
-type DPSpanReg struct{}
+type DPSpanReg struct {
+	TBist       types.Word
+	TestMode    types.Word
+	BufTestAddr types.Word
+	BufTestData types.Word
+}
 
 // MIReg MIPS Interface (MI) Registers 0x04300000 to 0x043FFFFF
-type MIReg struct{}
+type MIReg struct {
+	InitMode types.Word
+	Version  types.Word
+	Intr     types.Word
+	IntrMask types.Word
+}
 
 // VIReg Video Interface (VI) Registers 0x04400000 to 0x044FFFFF
-type VIReg struct{}
+type VIReg struct {
+	Status  types.Word
+	Origin  types.Word
+	Width   types.Word
+	Intr    types.Word
+	Current types.Word
+	Burst   types.Word
+	VSync   types.Word
+	HSync   types.Word
+	Leap    types.Word
+	HStart  types.Word
+	VStart  types.Word
+	VBurst  types.Word
+	XScale  types.Word
+	YSCale  types.Word
+}
 
 // AIReg Audio Interface (AI) Registers 0x04500000 to 0x045FFFFF
 type AIReg struct{}
