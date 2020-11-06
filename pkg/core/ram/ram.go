@@ -166,10 +166,22 @@ type VIReg struct {
 }
 
 // AIReg Audio Interface (AI) Registers 0x04500000 to 0x045FFFFF
-type AIReg struct{}
+type AIReg struct {
+	DramAddr types.Word
+	Len      types.Word
+	Status   types.Word
+	DACRate  types.Word
+	BitRate  types.Word
+}
 
 // PIReg Peripheral/Parallel Interface (PI) Registers 0x04600000 to 0x046FFFFF
-type PIReg struct{}
+type PIReg struct {
+	DramAddr types.Word
+	CartAddr types.Word
+	RdLen    types.Word
+	WrLen    types.Word
+	Status   types.Word
+}
 
 // RIReg RDRAM Interface (RI) Registers 0x04700000 to 0x047FFFFF
 type RIReg struct{}
