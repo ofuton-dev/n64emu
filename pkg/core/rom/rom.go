@@ -33,7 +33,6 @@ import (
 	"io/ioutil"
 	"n64emu/pkg/types"
 	"os"
-	"unsafe"
 )
 
 const (
@@ -221,11 +220,10 @@ func NewRom(romPath string) (Rom, error) {
 	}
 
 	// Read from file
-	byteArr, err := ioutil.ReadFile(romPath)
+	src, err := ioutil.ReadFile(romPath)
 	if err != nil {
 		return dst, err
 	}
-	src := *(*[]types.Byte)(unsafe.Pointer(&byteArr)) // same type
 
 	// Detect identifier. repair rom endian and byte-swapped.
 	if err := repairOrder(src); err != nil {
@@ -233,14 +231,14 @@ func NewRom(romPath string) (Rom, error) {
 	}
 
 	// Parse cartridge rom header and data
-	dst.ClockRateOverride = types.Word(binary.BigEndian.Uint32(byteArr[0x4:0x8]))
-	dst.ProgramCounter = types.Word(binary.BigEndian.Uint32(byteArr[0x8:0xc]))
-	dst.ReleaseAddress = types.Word(binary.BigEndian.Uint32(byteArr[0xc:0x10]))
-	dst.Crc1 = types.Word(binary.BigEndian.Uint32(byteArr[0x10:0x14]))
-	dst.Crc2 = types.Word(binary.BigEndian.Uint32(byteArr[0x14:0x18]))
-	dst.ImageName = string(byteArr[0x20 : 0x20+ImageNameSize]) // 0x20 ~ 0x34
-	dst.MediaFormat = types.Word(binary.BigEndian.Uint32(byteArr[0x38:0x3c]))
-	dst.CartridgeId = types.HalfWord(binary.BigEndian.Uint16(byteArr[0x3c:0x3e]))
+	dst.ClockRateOverride = types.Word(binary.BigEndian.Uint32(src[0x4:0x8]))
+	dst.ProgramCounter = types.Word(binary.BigEndian.Uint32(src[0x8:0xc]))
+	dst.ReleaseAddress = types.Word(binary.BigEndian.Uint32(src[0xc:0x10]))
+	dst.Crc1 = types.Word(binary.BigEndian.Uint32(src[0x10:0x14]))
+	dst.Crc2 = types.Word(binary.BigEndian.Uint32(src[0x14:0x18]))
+	dst.ImageName = string(src[0x20 : 0x20+ImageNameSize]) // 0x20 ~ 0x34
+	dst.MediaFormat = types.Word(binary.BigEndian.Uint32(src[0x38:0x3c]))
+	dst.CartridgeId = types.HalfWord(binary.BigEndian.Uint16(src[0x3c:0x3e]))
 	dst.CountryCode = CountryCode(src[0x3e])
 	dst.Version = types.Byte(src[0x3f])
 	dst.BootCode = src[0x40 : 0x40+BootCodeSize] // 0x40 ~ 0x1000
