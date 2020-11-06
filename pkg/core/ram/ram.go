@@ -59,28 +59,38 @@ type RAM struct {
 }
 
 // RDRAMReg RDRAM Registers 0x03F00000 to 0x03FFFFFF
-// 0x03F00000 to 0x03F00003 R/W RDRAM_CONFIG_REG or RDRAM_DEVICE_TYPE_REG
-// 0x03F00004 to 0x03F00007 R/W RDRAM_DEVICE_ID_REG
-// 0x03F00008 to 0x03F0000B R/W RDRAM_DELAY_REG
-// 0x03F0000C to 0x03F0000F R/W RDRAM_MODE_REG
-// 0x03F00010 to 0x03F00013 R/W RDRAM_REF_INTERVAL_REG
-// 0x03F00014 to 0x03F00017 R/W RDRAM_REF_ROW_REG
-// 0x03F00018 to 0x03F0001B R/W RDRAM_RAS_INTERVAL_REG
-// 0x03F0001C to 0x03F0001F R/W RDRAM_MIN_INTERVAL_REG
-// 0x03F00020 to 0x03F00023 R/W RDRAM_ADDR_SELECT_REG
-// 0x03F00024 to 0x03F00027 R/W RDRAM_DEVICE_MANUF_REG
-// 0x03F00028 to 0x03FFFFFF *   Unknown
 type RDRAMReg struct {
-	Config      types.Word
-	DeviceID    types.Word
-	Delay       types.Word
-	Mode        types.Word
+	// 0x03F00000 to 0x03F00003 R/W RDRAM_CONFIG_REG or RDRAM_DEVICE_TYPE_REG
+	Config types.Word
+
+	// 0x03F00004 to 0x03F00007 R/W RDRAM_DEVICE_ID_REG
+	DeviceID types.Word
+
+	// 0x03F00008 to 0x03F0000B R/W RDRAM_DELAY_REG
+	Delay types.Word
+
+	// 0x03F0000C to 0x03F0000F R/W RDRAM_MODE_REG
+	Mode types.Word
+
+	// 0x03F00010 to 0x03F00013 R/W RDRAM_REF_INTERVAL_REG
 	RefInterval types.Word
-	RefRow      types.Word
+
+	// 0x03F00014 to 0x03F00017 R/W RDRAM_REF_ROW_REG
+	RefRow types.Word
+
+	// 0x03F00018 to 0x03F0001B R/W RDRAM_RAS_INTERVAL_REG
 	RasInterval types.Word
+
+	// 0x03F0001C to 0x03F0001F R/W RDRAM_MIN_INTERVAL_REG
 	MinInterval types.Word
-	AddrSelect  types.Word
+
+	// 0x03F00020 to 0x03F00023 R/W RDRAM_ADDR_SELECT_REG
+	AddrSelect types.Word
+
+	// 0x03F00024 to 0x03F00027 R/W RDRAM_DEVICE_MANUF_REG
 	DeviceManuf types.Word
+
+	// 0x03F00028 to 0x03FFFFFF *   Unknown
 }
 
 // SPReg Signal Processor Registers 0x04000000 to 0x0400FFFF
@@ -181,6 +191,14 @@ type PIReg struct {
 	RdLen    types.Word
 	WrLen    types.Word
 	Status   types.Word
+	Dom1Lat  types.Word
+	Dom1Pwd  types.Word
+	Dom1Pgs  types.Word
+	Dom1Rls  types.Word
+	Dom2Lat  types.Word
+	Dom2Pwd  types.Word
+	Dom2Pgs  types.Word
+	Dom2Rls  types.Word
 }
 
 // RIReg RDRAM Interface (RI) Registers 0x04700000 to 0x047FFFFF
