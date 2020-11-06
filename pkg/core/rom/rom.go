@@ -193,12 +193,6 @@ func repairOrder(src []types.Byte) error {
 	return nil
 }
 
-// Check CRC
-func (rom *Rom) checkCrc() error {
-	// TODO: Implement here
-	return nil
-}
-
 // Read from ROM file
 func NewRom(romPath string) (Rom, error) {
 	dst := Rom{
@@ -243,12 +237,6 @@ func NewRom(romPath string) (Rom, error) {
 	dst.Version = types.Byte(src[0x3f])
 	dst.BootCode = src[0x40 : 0x40+BootCodeSize] // 0x40 ~ 0x1000
 	dst.Data = src[RomHeaderSize:]               // 0x1000 ~ File End
-
-	// CRC Check
-	// If the check fails, the data may still be usable, so set up the data and then perform the CRC check.
-	if err := dst.checkCrc(); err != nil {
-		return dst, err
-	}
 
 	// done.
 	return dst, nil
