@@ -202,28 +202,70 @@ type PIReg struct {
 }
 
 // RIReg RDRAM Interface (RI) Registers 0x04700000 to 0x047FFFFF
-type RIReg struct{}
+type RIReg struct {
+	Mode    types.Word
+	Config  types.Word
+	Current types.Word
+	Refresh types.Word
+	Latency types.Word
+	RdError types.Word
+	WrError types.Word
+}
 
 // SIReg Serial Interface (SI) Registers 0x04800000 to 0x048FFFFF
-type SIReg struct{}
-
-// CartDomain2 Cartridge Domain 2
-type CartDomain2 struct {
-	// 0x05000000 to 0x05FFFFFF
-	Address1 struct{}
-
-	// 0x08000000 to 0x0FFFFFFF
-	Address2 struct{}
+type SIReg struct {
+	DramAddr     types.Word
+	PIFAddrRd64B types.Word
+	PIFAddrWr64B types.Word
+	Status       types.Word
 }
 
 // CartDomain1 Cartridge Domain 1
 type CartDomain1 struct {
-	// 0x06000000 to 0x07FFFFFF
-	Address1 struct{}
+	// 0x06000000 to 0x07FFFFFF This address seems to be where the n64ddrive would be addressed
+	Address1 [0x2000000]types.Byte
 
 	// 0x10000000 to 0x1FBFFFFF
-	Address2 struct{}
+	Address2 struct {
+		// 0x10000000 to 0x1000003F ROM header
+		// NOTE: not define ROM header because ROM header info is in rom.ROM struct
 
-	// 0x1FD00000 to 0x7FFFFFFF Unknown
-	Address3 struct{}
+		// 0x10000040 to 0x10000B6F
+		RAMROMBootstrapOffset [2864]types.Byte
+
+		// 0x10000B70 to 0x10000FEF
+		RAMROMFontDataOffset [1152]types.Byte
+
+		// 0x10001000 to 0x10FF9FFF
+		RAMROMGameOffset [16748544]types.Byte
+
+		// 0x10FFA000 to 0x10FFAFFF
+		RAMROMAppReadAddr [4096]types.Byte
+
+		// 0x10FFB000 to 0x10FFBFFF
+		RAMROMAppWriteAddr [4096]types.Byte
+
+		// 0x10FFC000 to 0x10FFCFFF
+		RAMROMRmonReadAddr [4096]types.Byte
+
+		// 0x10FFD000 to 0x10FFDFFF
+		RAMROMRmonWriteAddr [4096]types.Byte
+
+		// 0x10FFE000 to 0x10FFEFFF
+		RAMROMPrintfAddr [4096]types.Byte
+
+		// 0x10FFF000 to 0x10FFFFFF
+		RAMROMLogAddr [4096]types.Byte
+	}
+
+	// Address3 0x1FD00000 to 0x7FFFFFFF Unknown
+}
+
+// CartDomain2 Cartridge Domain 2
+type CartDomain2 struct {
+	// 0x05000000 to 0x05FFFFFF
+	Address1 [0x1000000]types.Byte
+
+	// 0x08000000 to 0x0FFFFFFF SRAM could be here
+	Address2 [0x8000000]types.Byte
 }
