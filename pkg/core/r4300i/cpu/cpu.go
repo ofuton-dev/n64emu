@@ -1,7 +1,7 @@
 package cpu
 
 import (
-	"n64emu/pkg/bus"
+	"n64emu/pkg/core/bus"
 	"n64emu/pkg/core/r4300i/inst"
 	"n64emu/pkg/core/r4300i/reg"
 	"n64emu/pkg/types"
