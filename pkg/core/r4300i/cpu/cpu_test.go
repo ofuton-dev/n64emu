@@ -75,6 +75,15 @@ func TestSRL(t *testing.T) {
 	assert.Equal(types.DoubleWord(0x2), cpu.gpr.Read(3), "should shifted value stored")
 }
 
+func TestSRA(t *testing.T) {
+	assert := assert.New(t)
+	// SLL rd=3, rt=2, sa=3
+	cpu, _ := setupCPU(0, []types.Byte{0xC3, 0x18, 0x02, 0x00})
+	cpu.gpr.Write(2, 0x00000000FFFFFFFF)
+	cpu.Step()
+	assert.Equal(types.DoubleWord(0xFFFFFFFFFFFFFFFF), cpu.gpr.Read(3), "should shifted value stored")
+}
+
 func TestOR(t *testing.T) {
 	assert := assert.New(t)
 	// OR rd=3, rs=1, rt=2

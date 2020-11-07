@@ -40,7 +40,6 @@ Register map:
 package reg
 
 import (
-	"fmt"
 	"n64emu/pkg/types"
 )
 
@@ -63,7 +62,6 @@ func NewGPR() GPR {
 
 // Read value of the register.
 func (gpr *GPR) Read(index types.Byte) types.DoubleWord {
-	fmt.Println(index, gpr.r[index], gpr.r)
 	if index == 0 {
 		return 0
 	}
