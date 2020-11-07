@@ -54,16 +54,19 @@ func (c *CPU) Step() {
 	//       Implement later here.
 
 	opcode := c.fetch()
-	op := inst.GetOp(opcode)
+	c.execute(opcode)
+}
 
+func (c *CPU) execute(opcode types.Word) {
+	op := inst.GetOp(opcode)
 	switch op {
 	// R type instructions
 	// SPECIAL
 	case 0x00:
 		instR := inst.DecodeR(opcode)
 		switch instR.Funct {
-		case 0x00:
-			util.TODO("SLL")
+		case 0x00: // SLL
+			sll(&c.gpr, &instR)
 		case 0x02:
 			util.TODO("SRL")
 		case 0x03:
