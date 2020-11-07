@@ -39,7 +39,9 @@ Register map:
 
 package reg
 
-import "n64emu/pkg/types"
+import (
+	"n64emu/pkg/types"
+)
 
 const (
 	NumOfRegsInGpr = 32
@@ -62,9 +64,8 @@ func NewGPR() GPR {
 func (gpr *GPR) Read(index types.Byte) types.DoubleWord {
 	if index == 0 {
 		return 0
-	} else {
-		return gpr.r[index]
 	}
+	return gpr.r[index]
 }
 
 // Write value in register
