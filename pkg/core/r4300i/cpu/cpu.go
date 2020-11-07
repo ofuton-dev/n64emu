@@ -67,8 +67,8 @@ func (c *CPU) execute(opcode types.Word) {
 		switch instR.Funct {
 		case 0x00: // SLL
 			sll(&c.gpr, &instR)
-		case 0x02:
-			util.TODO("SRL")
+		case 0x02: // SRL
+			srl(&c.gpr, &instR)
 		case 0x03:
 			util.TODO("SRA")
 		case 0x04:
