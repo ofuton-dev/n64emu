@@ -18,7 +18,7 @@ R-Instruction format:
 
 */
 
-package inst
+package cpu
 
 import "n64emu/pkg/types"
 
