@@ -91,7 +91,7 @@ const (
 	EuropeanY    CountryCode = 0x59
 )
 
-type Rom struct {
+type ROM struct {
 	// filepath
 	RomPath string
 	// 0x04, 4 bytes
@@ -194,14 +194,14 @@ func repairOrder(src []types.Byte) error {
 }
 
 // Check CRC
-func (rom *Rom) checkCrc() error {
+func (rom *ROM) checkCrc() error {
 	// TODO: Implement here
 	return nil
 }
 
 // Read from ROM file
-func NewRom(romPath string) (Rom, error) {
-	dst := Rom{
+func NewRom(romPath string) (ROM, error) {
+	dst := ROM{
 		RomPath: romPath,
 	}
 	// Check file
