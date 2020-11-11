@@ -12,25 +12,27 @@ Reference:
 package pif
 
 import (
+	"n64emu/pkg/core/joybus"
 	"n64emu/pkg/types"
 	"n64emu/pkg/util"
 	"n64emu/pkg/util/assert"
 )
 
 const (
-	PifRomSize = 0x7c0
-	PifRamSize = 64
-	// 0~3: joystick, 4: EEPROM, 5: EEPROM(Option)
-	PifNumOfChannels = 6
+	PIFROMSize         = 0x7c0
+	PIFRAMSize         = 64
+	PIFNumOfController = 4
+	PIFNumOfEEPROM     = 2
+	PIFNumOfChannels   = PIFNumOfController + PIFNumOfEEPROM
 )
 
 // StatusByte: PIF RAM[0x3f]
-type PifStatus types.Byte
+type PIFStatus types.Byte
 
 const (
-	Idle       = PifStatus(0x00)
-	NewCommand = PifStatus(0x01)
-	Busy       = PifStatus(0x80)
+	Idle       = PIFStatus(0x00)
+	NewCommand = PIFStatus(0x01)
+	Busy       = PIFStatus(0x80)
 	// TODO: I'll need to find some more information.
 	//  PifStatus(0x02)
 	//  PifStatus(0x08)
@@ -39,6 +41,7 @@ const (
 	//  PifStatus(0xc0)
 )
 
+// Definition of the case where TX byte has a special meaning
 type ChannelType types.Byte
 
 const (
@@ -48,62 +51,54 @@ const (
 	ChannelReset = ChannelType(0xfd)
 )
 
-// Command processing types
-type CommandType types.Byte
-
-const (
-	RequestInfo         = CommandType(0x00)
-	ReadButtonValues    = CommandType(0x01)
-	ReadFromMempackSlot = CommandType(0x02)
-	WriteToMempackSlot  = CommandType(0x03)
-	ReadEeprom          = CommandType(0x04)
-	WriteEeprom         = CommandType(0x05)
-	RTCStatuQuery       = CommandType(0x06)
-	ReadRTCBlock        = CommandType(0x07)
-	WriteRTCBlock       = CommandType(0x08)
-	Reset               = types.Byte(0xff)
-)
-
-// Command processing result
-type CommandResult types.Byte
-
-const (
-	// no error, operation successful.
-	Suscess = CommandResult(0x00)
-	// error, device not present for specified command.
-	DeviceNotPresent = CommandResult(0x80)
-	// error, unable to send/recieve the number bytes for command type.
-	UnableToTransferDatas = CommandResult(0x40)
-)
-
 type PIF struct {
 	// PIF ROM
-	rom [PifRomSize]types.Byte
+	rom [PIFROMSize]types.Byte
 	// PIF RAM
-	ram [PifRamSize]types.Byte
+	ram [PIFRAMSize]types.Byte
+	// Controllers
+	controllers [PIFNumOfController]*joybus.JoyBus
+	// EEPROM
+	eeproms [PIFNumOfEEPROM]*joybus.JoyBus
 }
 
 // Emulate PIF Boot Rom
 func (pif *PIF) EmulateBoot() {
-	util.TODO("unimplemented.")
+	util.TODO("unimplemented")
 }
 
-// Communicate to joystick
-func (pif *PIF) communicateJoystick(channel types.Byte, txBuf, rxBuf []types.Byte) CommandResult {
-	cmd := CommandType(txBuf[0])
-	assert.Assert((cmd != ReadEeprom) && (cmd != WriteEeprom) && (cmd != RTCStatuQuery) && (cmd != ReadRTCBlock) && (cmd != WriteRTCBlock), "Do not send eeprom commands to joyStick")
+// Communicate to controller
+func (pif *PIF) communicateController(channel types.Byte, txBuf, rxBuf []types.Byte) joybus.CommandResult {
+	cmd := joybus.CommandType(txBuf[0])
+	assert.Assert((cmd != joybus.ReadEeprom) && (cmd != joybus.WriteEeprom) && (cmd != joybus.RTCStatuQuery) && (cmd != joybus.ReadRTCBlock) && (cmd != joybus.WriteRTCBlock), "Do not send eeprom commands to joyStick")
 
-	// TODO: Keep a Joystick instance and send commands
-	return DeviceNotPresent
+	// channel=0 ,1 ,2 ,3
+	assert.Assert(channel < PIFNumOfController, "channel is out of bounds")
+
+	// No connection
+	if pif.controllers[channel] == nil {
+		return joybus.DeviceNotPresent
+	}
+	// Do command
+	return (*pif.controllers[channel]).Run(cmd, txBuf, rxBuf)
 }
 
 // Communicate to EEPROM
-func (pif *PIF) communicateEEPROM(channel types.Byte, txBuf, rxBuf []types.Byte) CommandResult {
-	cmd := CommandType(txBuf[0])
-	assert.Assert((cmd != ReadButtonValues) && (cmd != ReadFromMempackSlot) && (cmd != WriteToMempackSlot), "Do not send joystick commands to eeprom")
+func (pif *PIF) communicateEEPROM(channel types.Byte, txBuf, rxBuf []types.Byte) joybus.CommandResult {
+	cmd := joybus.CommandType(txBuf[0])
+	assert.Assert((cmd != joybus.ReadButtonValues) && (cmd != joybus.ReadFromMempackSlot) && (cmd != joybus.WriteToMempackSlot), "Do not send controller commands to eeprom")
 
-	// TODO: Keep a EEPROM instance and send commands
-	return DeviceNotPresent
+	// channel=4 or 5
+	assert.Assert((PIFNumOfController < channel) && (channel < PIFNumOfController+PIFNumOfEEPROM), "channel is out of bounds.")
+	eepromIndex := channel - PIFNumOfController
+
+	// No connection
+	if pif.eeproms[eepromIndex] == nil {
+		return joybus.DeviceNotPresent
+	}
+
+	// Do command
+	return (*pif.eeproms[eepromIndex]).Run(cmd, txBuf, rxBuf)
 }
 
 // Run Command on PIF RAM
@@ -125,13 +120,13 @@ func (pif *PIF) runCmd(channel, offset types.Byte) types.Byte {
 	rxBuf := data[2+txLen : 2+txLen+rxLen] // [a, b, ...]
 
 	// communicate
-	result := DeviceNotPresent
+	result := joybus.DeviceNotPresent
 	switch channel {
-	case 0: // joystick0
-	case 1: // joystick1
-	case 2: // joystick2
-	case 3: // joystick3
-		result = pif.communicateJoystick(channel, txBuf, rxBuf)
+	case 0: // controller0
+	case 1: // controller1
+	case 2: // controller2
+	case 3: // controller3
+		result = pif.communicateController(channel, txBuf, rxBuf)
 		break
 	case 4: // eeprom
 	case 5: // eeproom(option)
@@ -149,6 +144,22 @@ func (pif *PIF) runCmd(channel, offset types.Byte) types.Byte {
 	return 2 + txLen + rxLen
 }
 
+// Register JoyBus device
+func (pif *PIF) Register(channel types.Byte, device *joybus.JoyBus) {
+	if channel < PIFNumOfController {
+		pif.controllers[channel] = device
+	} else if channel < PIFNumOfController+PIFNumOfEEPROM {
+		pif.eeproms[channel-PIFNumOfController] = device
+	} else {
+		assert.Assert(false, "channel  is out of bounds")
+	}
+}
+
+// Unregister JoyBus device
+func (pif *PIF) Unregister(channel types.Byte) {
+	pif.Register(channel, nil)
+}
+
 // Update PIF Status
 func (pif *PIF) Update() {
 	// check status bytes
@@ -158,7 +169,7 @@ func (pif *PIF) Update() {
 	// scan command in ram
 	channel := types.Byte(0)
 	offset := types.Byte(0)
-	for (offset < PifRamSize) && (channel < PifNumOfChannels) {
+	for (offset < PIFRAMSize) && (channel < PIFNumOfChannels) {
 		switch ChannelType(pif.ram[offset]) {
 		case SkipChannel:
 		case DummyData:
@@ -168,7 +179,7 @@ func (pif *PIF) Update() {
 		case EndOfSetup:
 		case ChannelReset:
 			// abort scan
-			offset = PifRamSize
+			offset = PIFRAMSize
 			break
 		default:
 			// do command
