@@ -2,8 +2,7 @@ package cpu
 
 import (
 	"n64emu/pkg/core/bus"
-	"n64emu/pkg/core/r4300i/inst"
-	"n64emu/pkg/core/r4300i/reg"
+	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 	"n64emu/pkg/util"
 )
@@ -58,12 +57,12 @@ func (c *CPU) Step() {
 }
 
 func (c *CPU) execute(opcode types.Word) {
-	op := inst.GetOp(opcode)
+	op := GetOp(opcode)
 	switch op {
 	// R type instructions
 	// SPECIAL
 	case 0x00:
-		instR := inst.DecodeR(opcode)
+		instR := DecodeR(opcode)
 		switch instR.Funct {
 		case 0x00: // SLL
 			sll(&c.gpr, &instR)
@@ -160,7 +159,7 @@ func (c *CPU) execute(opcode types.Word) {
 		}
 		// TODO: map other instructions
 	case 0x01:
-		instI := inst.DecodeI(opcode)
+		instI := DecodeI(opcode)
 		switch instI.Rt {
 		case 0x00:
 			util.TODO("BLTZ")

@@ -91,7 +91,7 @@ const (
 	EuropeanY    CountryCode = 0x59
 )
 
-type Rom struct {
+type ROM struct {
 	// filepath
 	RomPath string
 	// 0x04, 4 bytes
@@ -109,7 +109,7 @@ type Rom struct {
 	// 0x38, 4 bytes
 	MediaFormat types.Word
 	// 0x3c, 2 bytes
-	CartridgeId types.HalfWord
+	CartridgeID types.HalfWord
 	// 0x3e, 1 byte
 	CountryCode CountryCode
 	// 0x3f, 1 byte
@@ -194,8 +194,8 @@ func repairOrder(src []types.Byte) error {
 }
 
 // Read from ROM file
-func NewRom(romPath string) (Rom, error) {
-	dst := Rom{
+func NewRom(romPath string) (ROM, error) {
+	dst := ROM{
 		RomPath: romPath,
 	}
 	// Check file
@@ -232,7 +232,7 @@ func NewRom(romPath string) (Rom, error) {
 	dst.Crc2 = types.Word(binary.BigEndian.Uint32(src[0x14:0x18]))
 	dst.ImageName = string(src[0x20 : 0x20+ImageNameSize]) // 0x20 ~ 0x34
 	dst.MediaFormat = types.Word(binary.BigEndian.Uint32(src[0x38:0x3c]))
-	dst.CartridgeId = types.HalfWord(binary.BigEndian.Uint16(src[0x3c:0x3e]))
+	dst.CartridgeID = types.HalfWord(binary.BigEndian.Uint16(src[0x3c:0x3e]))
 	dst.CountryCode = CountryCode(src[0x3e])
 	dst.Version = types.Byte(src[0x3f])
 	dst.BootCode = src[0x40 : 0x40+BootCodeSize] // 0x40 ~ 0x1000
