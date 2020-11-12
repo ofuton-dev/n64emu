@@ -57,12 +57,12 @@ func TestSLL(t *testing.T) {
 	// SLL rd=3, rt=2, sa=3
 	cpu, _ := setupCPU(0, []types.Byte{0xC0, 0x18, 0x02, 0x00})
 	cpu.gpr.Write(2, 0x2)
-	cpu.Step()
+	cpu.RunUntil(5)
 	assert.Equal(types.DoubleWord(0x10), cpu.gpr.Read(3), "should shifted value stored")
 	// SLL rd=3, rt=2, sa=0 with sign extended
 	cpu, _ = setupCPU(0, []types.Byte{0x00, 0x18, 0x02, 0x00})
 	cpu.gpr.Write(2, 0x00000000FFFFFFFF)
-	cpu.Step()
+	cpu.RunUntil(5)
 	assert.Equal(types.DoubleWord(0xFFFFFFFFFFFFFFFF), cpu.gpr.Read(3), "should shifted value stored")
 }
 
@@ -71,7 +71,7 @@ func TestSRL(t *testing.T) {
 	// SLL rd=3, rt=2, sa=3
 	cpu, _ := setupCPU(0, []types.Byte{0xC2, 0x18, 0x02, 0x00})
 	cpu.gpr.Write(2, 0x10)
-	cpu.Step()
+	cpu.RunUntil(5)
 	assert.Equal(types.DoubleWord(0x2), cpu.gpr.Read(3), "should shifted value stored")
 }
 
@@ -80,7 +80,7 @@ func TestSRA(t *testing.T) {
 	// SLL rd=3, rt=2, sa=3
 	cpu, _ := setupCPU(0, []types.Byte{0xC3, 0x18, 0x02, 0x00})
 	cpu.gpr.Write(2, 0x00000000FFFFFFFF)
-	cpu.Step()
+	cpu.RunUntil(5)
 	assert.Equal(types.DoubleWord(0xFFFFFFFFFFFFFFFF), cpu.gpr.Read(3), "should shifted value stored")
 }
 
@@ -90,6 +90,6 @@ func TestOR(t *testing.T) {
 	cpu, _ := setupCPU(0, []types.Byte{0x25, 0x18, 0x22, 0x00})
 	cpu.gpr.Write(1, 0x00000000AAAAAAAA)
 	cpu.gpr.Write(2, 0x5555555500000000)
-	cpu.Step()
+	cpu.RunUntil(5)
 	assert.Equal(types.DoubleWord(0x55555555AAAAAAAA), cpu.gpr.Read(3), "should ORed value stored")
 }
