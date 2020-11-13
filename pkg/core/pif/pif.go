@@ -78,7 +78,7 @@ func (pif *PIF) EmulateBoot() {
 // Communicate to controller
 func (pif *PIF) communicateController(channel types.Byte, txBuf, rxBuf []types.Byte) joybus.CommandResult {
 	cmd := joybus.CommandType(txBuf[0])
-	assert.Assert((cmd != joybus.ReadEeprom) && (cmd != joybus.WriteEeprom) && (cmd != joybus.RTCStatuQuery) && (cmd != joybus.ReadRTCBlock) && (cmd != joybus.WriteRTCBlock), "Do not send eeprom commands to joyStick")
+	assert.Assert((cmd != joybus.ReadEEPROM) && (cmd != joybus.WriteEEPROM) && (cmd != joybus.RTCStatuQuery) && (cmd != joybus.ReadRTCBlock) && (cmd != joybus.WriteRTCBlock), "Do not send eeprom commands to joyStick")
 
 	// channel=0 ,1 ,2 ,3
 	assert.Assert(channel < PIFNumOfController, "channel is out of bounds")
