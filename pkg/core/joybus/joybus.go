@@ -23,7 +23,7 @@ type CommandResult types.Byte
 
 const (
 	// no error, operation successful.
-	Suscess = CommandResult(0x00)
+	Success = CommandResult(0x00)
 	// error, device not present for specified command.
 	DeviceNotPresent = CommandResult(0x80)
 	// error, unable to send/recieve the number bytes for command type.
