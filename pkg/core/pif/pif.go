@@ -51,6 +51,7 @@ const (
 	ChannelReset = ChannelType(0xfd)
 )
 
+// Peripheral Interface
 type PIF struct {
 	// PIF ROM
 	rom [PIFROMSize]types.Byte
@@ -62,7 +63,7 @@ type PIF struct {
 	eeproms [PIFNumOfEEPROM]*joybus.JoyBus
 }
 
-// Emulate PIF Boot Rom
+// Emulate PIF Boot ROM
 func (pif *PIF) EmulateBoot() {
 	util.TODO("unimplemented")
 }
@@ -144,6 +145,17 @@ func (pif *PIF) runCmd(channel, offset types.Byte) types.Byte {
 	return 2 + txLen + rxLen
 }
 
+// Reset PIF HW
+func (pif *PIF) Reset() {
+	// clear RAM
+	pif.ram = [PIFRAMSize]types.Byte{}
+
+	// this status byte will be set to 0x80 after holding down the reset button.
+	// set to 0x00 after you let go of the reset button or .5 seconds passes(whichever comes first)
+	pif.ram[PIFRAMSize-1] = types.Byte(Busy)
+	pif.ram[PIFRAMSize-1] = types.Byte(Idle) // TODO: It might be better to transfer the call to EmulateBoot or NMI interrupts
+}
+
 // Register JoyBus device
 func (pif *PIF) Register(channel types.Byte, device *joybus.JoyBus) {
 	if channel < PIFNumOfController {
@@ -151,7 +163,7 @@ func (pif *PIF) Register(channel types.Byte, device *joybus.JoyBus) {
 	} else if channel < PIFNumOfController+PIFNumOfEEPROM {
 		pif.eeproms[channel-PIFNumOfController] = device
 	} else {
-		assert.Assert(false, "channel  is out of bounds")
+		assert.Assert(false, "channel is out of bounds")
 	}
 }
 
@@ -162,9 +174,16 @@ func (pif *PIF) Unregister(channel types.Byte) {
 
 // Update PIF Status
 func (pif *PIF) Update() {
-	// check status bytes
-	// statusByte := pif.ram[len(pif.ram)-1]
-	// TODO: check statusByte
+	// check status byte
+	switch PIFStatus(pif.ram[PIFRAMSize-1]) {
+	case NewCommand:
+		break
+	case Busy:
+	case Idle:
+	default:
+		// TODO: Investigate what else to do with the status
+		return
+	}
 
 	// scan command in ram
 	channel := types.Byte(0)
@@ -188,4 +207,7 @@ func (pif *PIF) Update() {
 			break
 		}
 	}
+
+	// update status byte
+	pif.ram[PIFRAMSize-1] = types.Byte(Idle)
 }
