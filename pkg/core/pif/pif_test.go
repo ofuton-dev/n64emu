@@ -33,22 +33,18 @@ func (m *MockJoyBusDevice) Run(cmd joybus.CommandType, txBuf, rxBuf []types.Byte
 	return joybus.Success
 }
 
-func TestReadController(t *testing.T) {
+func TestUpdate(t *testing.T) {
 	const numOfControllers = 4
 	const numOfReadBytes = 4
 	tests := []struct {
 		name        string
 		controllers [numOfControllers]*MockJoyBusDevice
-		readDatas   [numOfControllers][numOfReadBytes]types.Byte
 		initialRAM  [PIFRAMSize]types.Byte
 		wantRAM     [PIFRAMSize]types.Byte
 	}{
 		{
 			name:        "DeviceNotPresent",
 			controllers: [numOfControllers]*MockJoyBusDevice{nil, nil, nil, nil},
-			readDatas: [numOfControllers][numOfReadBytes]types.Byte{
-				{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0},
-			},
 			initialRAM: [PIFRAMSize]types.Byte{
 				0xff, 0x01, 0x04, 0x01, 0xff, 0xff, 0xff, 0xff, // controller0: [dummy, tx:1, rx:4, cmd:ReadButtonValues], [dummy*4]
 				0xff, 0x01, 0x04, 0x01, 0xff, 0xff, 0xff, 0xff, // controller1: [dummy, tx:1, rx:4, cmd:ReadButtonValues], [dummy*4]
@@ -63,6 +59,35 @@ func TestReadController(t *testing.T) {
 				0xff, 0x01, 0x84, 0x01, 0xff, 0xff, 0xff, 0xff, // controller0: [dummy, tx:1, rx:(device not present, 4), cmd:ReadButtonValues], [dummy*4]
 				0xff, 0x01, 0x84, 0x01, 0xff, 0xff, 0xff, 0xff, // controller1: [dummy, tx:1, rx:(device not present, 4), cmd:ReadButtonValues], [dummy*4]
 				0xff, 0x01, 0x84, 0x01, 0xff, 0xff, 0xff, 0xff, // controller2: [dummy, tx:1, rx:(device not present, 4), cmd:ReadButtonValues], [dummy*4]
+				0xff, 0x01, 0x84, 0x01, 0xff, 0xff, 0xff, 0xff, // controller3: [dummy, tx:1, rx:(device not present, 4), cmd:ReadButtonValues], [dummy*4]
+				0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //              [end of setup],                                       [dummy*7]
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //              [dummy*8]
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //              [dummy*8]
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //              [dummy*7],                                               [idle]
+			},
+		},
+		{
+			name: "ReadButtonValuesToPort2",
+			controllers: [numOfControllers]*MockJoyBusDevice{
+				nil,
+				nil,
+				{wantCmd: joybus.ReadButtonValues, wantTxLen: 1, wantRxLen: 4, readDatas: []types.Byte{0xaa, 0x99, 0x55, 0x66}},
+				nil,
+			},
+			initialRAM: [PIFRAMSize]types.Byte{
+				0xff, 0x01, 0x04, 0x01, 0xff, 0xff, 0xff, 0xff, // controller0: [dummy, tx:1, rx:4, cmd:ReadButtonValues], [dummy*4]
+				0xff, 0x01, 0x04, 0x01, 0xff, 0xff, 0xff, 0xff, // controller1: [dummy, tx:1, rx:4, cmd:ReadButtonValues], [dummy*4]
+				0xff, 0x01, 0x04, 0x01, 0xff, 0xff, 0xff, 0xff, // controller2: [dummy, tx:1, rx:4, cmd:ReadButtonValues], [dummy*4]
+				0xff, 0x01, 0x04, 0x01, 0xff, 0xff, 0xff, 0xff, // controller3: [dummy, tx:1, rx:4, cmd:ReadButtonValues], [dummy*4]
+				0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //              [end of setup],                                       [dummy*7]
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //              [dummy*8]
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //              [dummy*8]
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, //              [dummy*7],                                        [new command]
+			},
+			wantRAM: [PIFRAMSize]types.Byte{
+				0xff, 0x01, 0x84, 0x01, 0xff, 0xff, 0xff, 0xff, // controller0: [dummy, tx:1, rx:(device not present, 4), cmd:ReadButtonValues], [dummy*4]
+				0xff, 0x01, 0x84, 0x01, 0xff, 0xff, 0xff, 0xff, // controller1: [dummy, tx:1, rx:(device not present, 4), cmd:ReadButtonValues], [dummy*4]
+				0xff, 0x01, 0x04, 0x01, 0xaa, 0x99, 0x55, 0x66, // controller2: [dummy, tx:1, rx:4, cmd:ReadButtonValues], [rd0, rd1, rd2, rd3]
 				0xff, 0x01, 0x84, 0x01, 0xff, 0xff, 0xff, 0xff, // controller3: [dummy, tx:1, rx:(device not present, 4), cmd:ReadButtonValues], [dummy*4]
 				0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //              [end of setup],                                       [dummy*7]
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //              [dummy*8]
