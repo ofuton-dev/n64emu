@@ -19,13 +19,13 @@ func NewPipeline() *Pipeline {
 	return &Pipeline{}
 }
 
-func (p *Pipeline) step(gpr *reg.GPR, fetch func() types.Word) {
+func (p *Pipeline) step(gpr *reg.GPR, execute func(opcode types.Word) *aluOutput, fetch func() types.Word) {
 	// TODO: We need to consider about pipeline exception, branch delay, load delay and etc...
 	p.writeBackStage(gpr)
 
 	p.dataCacheStage()
 
-	p.executionStage(gpr)
+	p.executionStage(execute)
 
 	p.registerFetchStage(fetch)
 
@@ -45,9 +45,9 @@ func (p *Pipeline) dataCacheStage() {
 }
 
 // EX - Execution
-func (p *Pipeline) executionStage(gpr *reg.GPR) {
+func (p *Pipeline) executionStage(execute func(opcode types.Word) *aluOutput) {
 	if p.registerFetchLatch != nil {
-		p.execute(gpr, *p.registerFetchLatch)
+		p.executionLatch = execute(*p.registerFetchLatch)
 	}
 }
 
