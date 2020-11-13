@@ -33,7 +33,7 @@ misspell:
 
 .PHONY: test
 test:
-	@go test --tags=$(TAGS) -v ./...
+	@go test --tags=$(TAGS) ./...
 
 .PHONY: help
 help:
