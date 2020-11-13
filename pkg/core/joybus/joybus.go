@@ -15,7 +15,7 @@ const (
 	RTCStatuQuery       = CommandType(0x06)
 	ReadRTCBlock        = CommandType(0x07)
 	WriteRTCBlock       = CommandType(0x08)
-	Reset               = types.Byte(0xff)
+	Reset               = CommandType(0xff)
 )
 
 // Command processing result
