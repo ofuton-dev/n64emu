@@ -78,12 +78,12 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			return srl(&c.gpr, &instR)
 		case 0x03: // SRA
 			return sra(&c.gpr, &instR)
-		case 0x04:
-			util.TODO("SLLV")
-		case 0x06:
-			util.TODO("SRLL")
-		case 0x07:
-			util.TODO("SRAV")
+		case 0x04: // SLLV
+			return sllv(&c.gpr, &instR)
+		case 0x06: // SRLV
+			return srlv(&c.gpr, &instR)
+		case 0x07: // SRAV
+			return srav(&c.gpr, &instR)
 		case 0x08:
 			util.TODO("JR")
 		case 0x09:

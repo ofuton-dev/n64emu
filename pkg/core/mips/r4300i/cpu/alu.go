@@ -37,6 +37,33 @@ func sra(gpr *reg.GPR, inst *InstR) *aluOutput {
 	}
 }
 
+// SLLV rd, rt, rs
+// Shifts the contents of register rt to the left and inserts 0 to the low-order bits.
+func sllv(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) << (inst.Rs & 0x1F)),
+	}
+}
+
+// SRLV rd, rt, rs
+// Shifts the contents of register rt to the right, and inserts 0 to the high-order bits.
+func srlv(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> (inst.Rs & 0x1F)),
+	}
+}
+
+// SRAV rd, rt, rs
+// Shifts the contents of register rt to the right and sign-extends the high-order bits.
+func srav(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> (inst.Rs & 0x1F)),
+	}
+}
+
 func or(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
 		dest:   inst.Rd,
