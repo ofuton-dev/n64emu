@@ -63,6 +63,13 @@ type PIF struct {
 	eeproms [PIFNumOfEEPROM]*joybus.JoyBus
 }
 
+// PIF constructor
+func NewPIF() *PIF {
+	pif := &PIF{}
+	pif.Reset()
+	return pif
+}
+
 // Emulate PIF Boot ROM
 func (pif *PIF) EmulateBoot() {
 	util.TODO("unimplemented")
@@ -117,25 +124,28 @@ func (pif *PIF) runCmd(channel, offset types.Byte) types.Byte {
 	txLen, rxLen := data[0], (data[1] & 0x3f)
 	assert.AssertNe(txLen, 0, "send tx num of bytes is zero")
 
-	txBuf := data[2 : 2+(txLen-1)]         // [cmd, ...]
+	txBuf := data[2 : 2+txLen]             // [cmd, ...]
 	rxBuf := data[2+txLen : 2+txLen+rxLen] // [a, b, ...]
 
 	// communicate
 	result := joybus.DeviceNotPresent
 	switch channel {
 	case 0: // controller0
+		fallthrough
 	case 1: // controller1
+		fallthrough
 	case 2: // controller2
+		fallthrough
 	case 3: // controller3
 		result = pif.communicateController(channel, txBuf, rxBuf)
-		break
+
 	case 4: // eeprom
+		fallthrough
 	case 5: // eeproom(option)
 		result = pif.communicateEEPROM(channel, txBuf, rxBuf)
-		break
+
 	default: // NC
 		assert.Assert(false, "unexpected channel")
-		break
 	}
 
 	// Write the result to rx byte
@@ -177,11 +187,14 @@ func (pif *PIF) Update() {
 	// check status byte
 	switch PIFStatus(pif.ram[PIFRAMSize-1]) {
 	case NewCommand:
-		break
+		// Continuing the process
+
 	case Busy:
+		fallthrough
 	case Idle:
-	default:
-		// TODO: Investigate what else to do with the status
+		fallthrough
+	default: // TODO: Investigate what else to do with the status
+		// do not something
 		return
 	}
 
@@ -191,20 +204,20 @@ func (pif *PIF) Update() {
 	for (offset < PIFRAMSize) && (channel < PIFNumOfChannels) {
 		switch ChannelType(pif.ram[offset]) {
 		case SkipChannel:
-		case DummyData:
 			offset++
 			channel++
-			break
+		case DummyData:
+			offset++
 		case EndOfSetup:
+			fallthrough
 		case ChannelReset:
 			// abort scan
 			offset = PIFRAMSize
-			break
 		default:
 			// do command
 			arrangeBytes := pif.runCmd(channel, offset)
 			offset += arrangeBytes
-			break
+			channel++
 		}
 	}
 
