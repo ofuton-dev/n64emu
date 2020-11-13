@@ -1,70 +1,72 @@
 package cpu
 
 import (
-	"n64emu/pkg/core/bus"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 	"n64emu/pkg/util"
 )
 
-// CPU is cpu registers and bus accessor
-type CPU struct {
-	gpr      reg.GPR          // 32 64-bit general purpose registers, GPRs
-	fpr      reg.FPR          // 32 64-bit floating-point operation registers, FPRs
-	pc       types.DoubleWord // Program Counter, the PC register
-	hi       types.DoubleWord // HI register, containing the integer multiply and divide highorder doubleword result
-	lo       types.DoubleWord // LO register, containing the integer multiply and divide loworder doubleword result
-	llBit    bool             //Load/Link LLBit register
-	fcr0     types.Word       // 32-bit floating-point Implementation/Revision register, FCR0
-	fcr31    types.Word       // 32-bit floating-point Control/Status register, FCR31
-	bus      bus.Bus          // Bus accessor
-	pipeline Pipeline
+// Pipeline is vr4300 pipeline module
+type Pipeline struct {
+	registerFetchReady bool
+	registerFetchLatch *types.Word
+	executionLatch     *aluOutput
+	dataCacheLatch     *aluOutput
 }
 
-// NewCPU is CPU constructor
-func NewCPU(bus bus.Bus) *CPU {
-	// TODO: Please check default value after power up.
-	cpu := &CPU{
-		gpr:   reg.NewGPR(),
-		fpr:   reg.NewFGR(),
-		pc:    0,
-		hi:    0,
-		lo:    0,
-		llBit: false,
-		fcr0:  0,
-		fcr31: 0,
-		bus:   bus,
-	}
-	return cpu
+// NewPipeline is Pipeline constructor
+func NewPipeline() *Pipeline {
+	return &Pipeline{}
 }
 
-func (c *CPU) endian() types.Endianness {
-	// TODO: For now, return only `BIG`.
-	return types.Big
+func (p *Pipeline) step(gpr *reg.GPR, execute func(opcode types.Word) *aluOutput, fetch func() types.Word) {
+	// TODO: We need to consider about pipeline exception, branch delay, load delay and etc...
+	p.writeBackStage(gpr)
+
+	p.dataCacheStage()
+
+	p.executionStage(execute)
+
+	p.registerFetchStage(fetch)
+
+	p.instructionCacheFetchStage()
 }
 
-func (c *CPU) fetch() types.Word {
-	data := c.bus.ReadWord(c.endian(), types.Word(c.pc))
-	c.pc += 4
-	return data
-}
-
-// Step runs 1 pclk cycle CPU
-func (c *CPU) Step() {
-	// TODO: We need to consider about `pipline`.
-	//       Implement later here.
-	c.pipeline.step(&c.gpr, c.execute, c.fetch)
-}
-
-// RunUntil runs CPU until specified cycles
-func (c *CPU) RunUntil(cycle types.Word) {
-	for cycle > 0 {
-		c.Step()
-		cycle--
+// WB - Write Back
+func (p *Pipeline) writeBackStage(gpr *reg.GPR) {
+	if p.dataCacheLatch != nil {
+		gpr.Write(p.dataCacheLatch.dest, p.dataCacheLatch.result)
 	}
 }
 
-func (c *CPU) execute(opcode types.Word) *aluOutput {
+// DC - Data Cache Fetch
+func (p *Pipeline) dataCacheStage() {
+	p.dataCacheLatch = p.executionLatch
+}
+
+// EX - Execution
+func (p *Pipeline) executionStage(execute func(opcode types.Word) *aluOutput) {
+	if p.registerFetchLatch != nil {
+		p.executionLatch = execute(*p.registerFetchLatch)
+	}
+}
+
+// RF - Register Fetch
+func (p *Pipeline) registerFetchStage(fetch func() types.Word) {
+	if p.registerFetchReady {
+		opcode := fetch()
+		p.registerFetchLatch = &opcode
+	}
+
+}
+
+// IC - Instruction Cache Fetch
+func (p *Pipeline) instructionCacheFetchStage() {
+	p.registerFetchReady = true
+	// TODO: NOP for now
+}
+
+func (p *Pipeline) execute(gpr *reg.GPR, opcode types.Word) {
 	op := GetOp(opcode)
 	switch op {
 	// R type instructions
@@ -73,17 +75,17 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 		instR := DecodeR(opcode)
 		switch instR.Funct {
 		case 0x00: // SLL
-			return sll(&c.gpr, &instR)
+			p.executionLatch = sll(gpr, &instR)
 		case 0x02: // SRL
-			return srl(&c.gpr, &instR)
+			p.executionLatch = srl(gpr, &instR)
 		case 0x03: // SRA
-			return sra(&c.gpr, &instR)
-		case 0x04: // SLLV
-			return sllv(&c.gpr, &instR)
-		case 0x06: // SRLV
-			return srlv(&c.gpr, &instR)
-		case 0x07: // SRAV
-			return srav(&c.gpr, &instR)
+			p.executionLatch = sra(gpr, &instR)
+		case 0x04:
+			util.TODO("SLLV")
+		case 0x06:
+			util.TODO("SRLL")
+		case 0x07:
+			util.TODO("SRAV")
 		case 0x08:
 			util.TODO("JR")
 		case 0x09:
@@ -133,7 +135,7 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 		case 0x24:
 			util.TODO("AND")
 		case 0x25: // OR
-			return or(&c.gpr, &instR)
+			p.executionLatch = or(gpr, &instR)
 		case 0x26:
 			util.TODO("XOR")
 		case 0x27:
@@ -309,5 +311,4 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 	case 0x3F:
 		util.TODO("SD")
 	}
-	return nil
 }
