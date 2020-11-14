@@ -117,8 +117,39 @@ func mtlo(gpr *reg.GPR, inst *InstR) *aluOutput {
 	}
 }
 
+// DSLLV rd, rt, rs
+// Shifts the contents of register rt to the left, and inserts 0 to the low-order bits.
+func dsllv(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		destType:     destTypeGPR,
+		destGPRIndex: inst.Rd,
+		result:       types.DoubleWord((gpr.Read(inst.Rt)) << (inst.Rs & 0x3F)),
+	}
+}
+
+// DSRLV rd, rt, rs
+// Shifts the contents of register rt to the right, and inserts 0 to the higher bits.
+func dsrlv(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		destType:     destTypeGPR,
+		destGPRIndex: inst.Rd,
+		result:       types.DoubleWord((gpr.Read(inst.Rt)) >> (inst.Rs & 0x3F)),
+	}
+}
+
+// DSRAV rd, rt, rs
+// Shifts the contents of register rt to the right, and sign-extends the high-order bits.
+func dsrav(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		destType:     destTypeGPR,
+		destGPRIndex: inst.Rd,
+		result:       types.DoubleWord(int64(gpr.Read(inst.Rt)) >> (inst.Rs & 0x3F)),
+	}
+}
+
 func or(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		destType:     destTypeGPR,
 		destGPRIndex: inst.Rd,
 		result:       types.DoubleWord(gpr.Read(inst.Rs) | gpr.Read(inst.Rt)),
 	}

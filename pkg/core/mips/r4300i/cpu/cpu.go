@@ -113,12 +113,12 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			return mflo(c.lo, &instR)
 		case 0x13: // MTLO
 			return mtlo(&c.gpr, &instR)
-		case 0x14:
-			util.TODO("DSLLV")
-		case 0x16:
-			util.TODO("DSRLV")
-		case 0x17:
-			util.TODO("DSRAV")
+		case 0x14: // DSLLV
+			return dsllv(&c.gpr, &instR)
+		case 0x16: // DSRLV
+			return dsrlv(&c.gpr, &instR)
+		case 0x17: // DSRAV
+			return dsrav(&c.gpr, &instR)
 		case 0x18:
 			util.TODO("MULT")
 		case 0x19:
