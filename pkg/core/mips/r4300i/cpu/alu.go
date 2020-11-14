@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"fmt"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 )
@@ -120,6 +121,8 @@ func mtlo(gpr *reg.GPR, inst *InstR) *aluOutput {
 // DSLLV rd, rt, rs
 // Shifts the contents of register rt to the left, and inserts 0 to the low-order bits.
 func dsllv(gpr *reg.GPR, inst *InstR) *aluOutput {
+	fmt.Println(gpr, inst.Rs, inst.Rd, inst.Rt)
+
 	return &aluOutput{
 		destType:     destTypeGPR,
 		destGPRIndex: inst.Rd,

@@ -1,7 +1,6 @@
 package cpu
 
 import (
-	"fmt"
 	"n64emu/pkg/core/bus"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
@@ -78,7 +77,6 @@ func (c *CPU) writeBack(output *aluOutput) {
 
 func (c *CPU) execute(opcode types.Word) *aluOutput {
 	op := GetOp(opcode)
-	fmt.Println(op)
 	switch op {
 	// R type instructions
 	// SPECIAL

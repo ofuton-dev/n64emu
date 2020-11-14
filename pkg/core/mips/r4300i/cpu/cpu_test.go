@@ -2,7 +2,6 @@ package cpu
 
 import (
 	"encoding/binary"
-	"fmt"
 	"n64emu/pkg/types"
 	"testing"
 
@@ -35,7 +34,7 @@ func (b *MockBus) ReadHalfWord(e types.Endianness, addr types.Word) types.HalfWo
 
 func (b *MockBus) ReadWord(e types.Endianness, addr types.Word) types.Word {
 	// TODO:  For now, fixed by BIG endian
-	return types.Word(b.MockMemory[addr])<<24 | types.Word(b.MockMemory[addr+1])<<16 | types.Word(b.MockMemory[addr+2])<<8 | types.Word(b.MockMemory[addr+3])
+	return binary.BigEndian.Uint32(b.MockMemory[addr : addr+4])
 }
 
 func (b *MockBus) ReadDoubleWord(e types.Endianness, addr types.Word) types.DoubleWord {
@@ -51,7 +50,6 @@ func (b *MockBus) SetMemory(offset types.Word, data []types.Byte) {
 func beOpcode2bytes(o types.Word) []types.Byte {
 	bytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(bytes, o)
-	fmt.Println(bytes)
 	return bytes
 }
 
@@ -99,7 +97,17 @@ func TestMTHI(t *testing.T) {
 	cpu, _ := setupCPU(0, beOpcode2bytes(0x00200011))
 	cpu.gpr.Write(1, 0x5555AAAA5555AAAA)
 	cpu.RunUntil(5)
-	assert.Equal(types.DoubleWord(0x5555AAAA5555AAAA), cpu.hi, "should shifted value stored")
+	assert.Equal(types.DoubleWord(0x5555AAAA5555AAAA), cpu.hi, "should 0x5555AAAA5555AAAA in hi register")
+}
+
+func TestDSLLV(t *testing.T) {
+	assert := assert.New(t)
+	// DSLLV rd=3, rt=2, rs=1
+	cpu, _ := setupCPU(0, beOpcode2bytes(0x00221814))
+	cpu.gpr.Write(2, 0x5555AAAA5555AAAA)
+	cpu.gpr.Write(1, 0x1)
+	cpu.RunUntil(5)
+	assert.Equal(types.DoubleWord(0xAAAB5554AAAB5554), cpu.gpr.Read(3), "should shifted value stored")
 }
 
 func TestOR(t *testing.T) {
