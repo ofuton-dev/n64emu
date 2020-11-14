@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"fmt"
 	"n64emu/pkg/core/bus"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
@@ -53,7 +54,7 @@ func (c *CPU) fetch() types.Word {
 func (c *CPU) Step() {
 	// TODO: We need to consider about `pipline`.
 	//       Implement later here.
-	c.pipeline.step(&c.gpr, c.execute, c.fetch)
+	c.pipeline.step(c.execute, c.fetch, c.writeBack)
 }
 
 // RunUntil runs CPU until specified cycles
@@ -64,8 +65,20 @@ func (c *CPU) RunUntil(cycle types.Word) {
 	}
 }
 
+func (c *CPU) writeBack(output *aluOutput) {
+	switch output.destType {
+	case destTypeGPR:
+		c.gpr.Write(output.destGPRIndex, output.result)
+	case destTypeHi:
+		c.hi = output.result
+	case destTypeLo:
+		c.lo = output.result
+	}
+}
+
 func (c *CPU) execute(opcode types.Word) *aluOutput {
 	op := GetOp(opcode)
+	fmt.Println(op)
 	switch op {
 	// R type instructions
 	// SPECIAL
@@ -92,14 +105,14 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			util.TODO("BREAK")
 		case 0x0F:
 			util.TODO("SYNC")
-		case 0x10:
-			util.TODO("MFHI")
-		case 0x11:
-			util.TODO("MTHI")
-		case 0x12:
-			util.TODO("MFLO")
-		case 0x13:
-			util.TODO("MTLO")
+		case 0x10: /// MFHI
+			return mfhi(c.hi, &instR)
+		case 0x11: // MTHI
+			return mthi(&c.gpr, &instR)
+		case 0x12: // MFLO
+			return mflo(c.lo, &instR)
+		case 0x13: // MTLO
+			return mtlo(&c.gpr, &instR)
 		case 0x14:
 			util.TODO("DSLLV")
 		case 0x16:
