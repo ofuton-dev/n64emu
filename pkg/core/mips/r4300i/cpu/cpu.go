@@ -53,7 +53,7 @@ func (c *CPU) fetch() types.Word {
 func (c *CPU) Step() {
 	// TODO: We need to consider about `pipline`.
 	//       Implement later here.
-	c.pipeline.step(c.execute, c.fetch, c.writeBack)
+	c.pipeline.step(&c.gpr, c.execute, c.fetch)
 }
 
 // RunUntil runs CPU until specified cycles
@@ -61,17 +61,6 @@ func (c *CPU) RunUntil(cycle types.Word) {
 	for cycle > 0 {
 		c.Step()
 		cycle--
-	}
-}
-
-func (c *CPU) writeBack(output *aluOutput) {
-	switch output.destType {
-	case destTypeGPR:
-		c.gpr.Write(output.destGPRIndex, output.result)
-	case destTypeHi:
-		c.hi = output.result
-	case destTypeLo:
-		c.lo = output.result
 	}
 }
 
@@ -106,19 +95,19 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 		case 0x10: /// MFHI
 			return mfhi(c.hi, &instR)
 		case 0x11: // MTHI
-			return mthi(&c.gpr, &instR)
+			return mthi(&c.gpr, &c.hi, &instR)
 		case 0x12: // MFLO
 			return mflo(c.lo, &instR)
 		case 0x13: // MTLO
-			return mtlo(&c.gpr, &instR)
+			return mtlo(&c.gpr, &c.lo, &instR)
 		case 0x14: // DSLLV
 			return dsllv(&c.gpr, &instR)
 		case 0x16: // DSRLV
 			return dsrlv(&c.gpr, &instR)
 		case 0x17: // DSRAV
 			return dsrav(&c.gpr, &instR)
-		case 0x18:
-			util.TODO("MULT")
+		case 0x18: // MULT
+			return mult(&c.gpr, &c.hi, &c.lo, &instR)
 		case 0x19:
 			util.TODO("MULTU")
 		case 0x1A:

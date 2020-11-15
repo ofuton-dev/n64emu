@@ -2,6 +2,7 @@ package cpu
 
 import (
 	"n64emu/pkg/core/bus"
+	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 )
 
@@ -21,9 +22,9 @@ func NewPipeline(bus bus.Bus) *Pipeline {
 	}
 }
 
-func (p *Pipeline) step(execute func(types.Word) *aluOutput, fetch func() types.Word, writeBack func(*aluOutput)) {
+func (p *Pipeline) step(gpr *reg.GPR, execute func(types.Word) *aluOutput, fetch func() types.Word) {
 	// TODO: We need to consider about pipeline exception, branch delay, load delay and etc...
-	p.writeBackStage(writeBack)
+	p.writeBackStage(gpr)
 
 	p.dataCacheStage()
 
@@ -35,9 +36,9 @@ func (p *Pipeline) step(execute func(types.Word) *aluOutput, fetch func() types.
 }
 
 // WB - Write Back
-func (p *Pipeline) writeBackStage(writeBack func(*aluOutput)) {
+func (p *Pipeline) writeBackStage(gpr *reg.GPR) {
 	if p.dataCacheLatch != nil {
-		writeBack(p.dataCacheLatch)
+		gpr.Write(p.dataCacheLatch.dest, p.dataCacheLatch.result)
 	}
 }
 

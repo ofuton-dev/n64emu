@@ -1,32 +1,21 @@
 package cpu
 
 import (
-	"fmt"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 )
 
-type destType byte
-
-const (
-	destTypeGPR destType = iota
-	destTypeHi
-	destTypeLo
-)
-
 type aluOutput struct {
-	destType     destType
-	destGPRIndex types.Byte
-	result       types.DoubleWord
+	dest   types.Byte
+	result types.DoubleWord
 }
 
 // SLL rd, rt, sa
 // The contents of general purpose register rt are shifted left by sa bits, inserting zeros into the low-order bits.
 func sll(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       types.DoubleWord((int32(gpr.Read(inst.Rt)) << inst.Sa)),
+		dest:   inst.Rd,
+		result: types.DoubleWord((int32(gpr.Read(inst.Rt)) << inst.Sa)),
 	}
 }
 
@@ -34,9 +23,8 @@ func sll(gpr *reg.GPR, inst *InstR) *aluOutput {
 // The contents of general purpose register rt are shifted right by sa bits, inserting zeros into the high-order bits.
 func srl(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       types.DoubleWord((gpr.Read(inst.Rt)) >> inst.Sa),
+		dest:   inst.Rd,
+		result: types.DoubleWord((gpr.Read(inst.Rt)) >> inst.Sa),
 	}
 }
 
@@ -44,9 +32,8 @@ func srl(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt sa bits to the right, and sign-extends the high- order bits.
 func sra(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       types.DoubleWord(int32(gpr.Read(inst.Rt)) >> inst.Sa),
+		dest:   inst.Rd,
+		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> inst.Sa),
 	}
 }
 
@@ -54,9 +41,8 @@ func sra(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the left and inserts 0 to the low-order bits.
 func sllv(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       types.DoubleWord(int32(gpr.Read(inst.Rt)) << (inst.Rs & 0x1F)),
+		dest:   inst.Rd,
+		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) << (inst.Rs & 0x1F)),
 	}
 }
 
@@ -64,9 +50,8 @@ func sllv(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the right, and inserts 0 to the high-order bits.
 func srlv(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       types.DoubleWord(int32(gpr.Read(inst.Rt)) >> (inst.Rs & 0x1F)),
+		dest:   inst.Rd,
+		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> (inst.Rs & 0x1F)),
 	}
 }
 
@@ -74,9 +59,8 @@ func srlv(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the right and sign-extends the high-order bits.
 func srav(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       types.DoubleWord(int32(gpr.Read(inst.Rt)) >> (inst.Rs & 0x1F)),
+		dest:   inst.Rd,
+		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> (inst.Rs & 0x1F)),
 	}
 }
 
@@ -84,9 +68,8 @@ func srav(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Transfers the contents of special register HI to register rd.
 func mfhi(hi types.DoubleWord, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       hi,
+		dest:   inst.Rd,
+		result: hi,
 	}
 }
 
@@ -94,39 +77,33 @@ func mfhi(hi types.DoubleWord, inst *InstR) *aluOutput {
 // Transfers the contents of special register LO to register rd.
 func mflo(lo types.DoubleWord, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       lo,
+		dest:   inst.Rd,
+		result: lo,
 	}
 }
 
 // MTHI rs
 // Transfers the contents of register rs to special register HI.
-func mthi(gpr *reg.GPR, inst *InstR) *aluOutput {
-	return &aluOutput{
-		destType: destTypeHi,
-		result:   types.DoubleWord(gpr.Read(inst.Rs)),
-	}
+func mthi(gpr *reg.GPR, hi *types.DoubleWord, inst *InstR) *aluOutput {
+	// TODO: We need to do some investigation about write back timing
+	*hi = types.DoubleWord(gpr.Read(inst.Rs))
+	return nil
 }
 
 // MTLO rs
 // Transfers the contents of register rs to special register LO.
-func mtlo(gpr *reg.GPR, inst *InstR) *aluOutput {
-	return &aluOutput{
-		destType: destTypeLo,
-		result:   types.DoubleWord(gpr.Read(inst.Rs)),
-	}
+func mtlo(gpr *reg.GPR, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	// TODO: We need to do some investigation about write back timing
+	*lo = types.DoubleWord(gpr.Read(inst.Rs))
+	return nil
 }
 
 // DSLLV rd, rt, rs
 // Shifts the contents of register rt to the left, and inserts 0 to the low-order bits.
 func dsllv(gpr *reg.GPR, inst *InstR) *aluOutput {
-	fmt.Println(gpr, inst.Rs, inst.Rd, inst.Rt)
-
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       types.DoubleWord((gpr.Read(inst.Rt)) << (inst.Rs & 0x3F)),
+		dest:   inst.Rd,
+		result: types.DoubleWord((gpr.Read(inst.Rt)) << (inst.Rs & 0x3F)),
 	}
 }
 
@@ -134,9 +111,8 @@ func dsllv(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the right, and inserts 0 to the higher bits.
 func dsrlv(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       types.DoubleWord((gpr.Read(inst.Rt)) >> (inst.Rs & 0x3F)),
+		dest:   inst.Rd,
+		result: types.DoubleWord((gpr.Read(inst.Rt)) >> (inst.Rs & 0x3F)),
 	}
 }
 
@@ -144,16 +120,24 @@ func dsrlv(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the right, and sign-extends the high-order bits.
 func dsrav(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       types.DoubleWord(int64(gpr.Read(inst.Rt)) >> (inst.Rs & 0x3F)),
+		dest:   inst.Rd,
+		result: types.DoubleWord(int64(gpr.Read(inst.Rt)) >> (inst.Rs & 0x3F)),
 	}
+}
+
+// MULT rs, rt
+// Multiplies the contents of register rs by the contents of register rt as a 32-bit signed integer.
+func mult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	result := types.DoubleWord(int64(gpr.Read(inst.Rt)) * int64(gpr.Read(inst.Rs)))
+	// TODO: We need to do some investigation about write back timing
+	*hi = result >> 32
+	*lo = result & 0xFFFFFFFF
+	return nil
 }
 
 func or(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
-		destType:     destTypeGPR,
-		destGPRIndex: inst.Rd,
-		result:       types.DoubleWord(gpr.Read(inst.Rs) | gpr.Read(inst.Rt)),
+		dest:   inst.Rd,
+		result: types.DoubleWord(gpr.Read(inst.Rs) | gpr.Read(inst.Rt)),
 	}
 }
