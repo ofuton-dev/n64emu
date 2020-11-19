@@ -46,6 +46,8 @@ const (
 // - PIF to Controller
 // - PIF to ControllerPak via Controller
 type JoyBus interface {
+	// Reset Device
+	Reset()
 	// Do Command
 	Run(cmd CommandType, txBuf, rxBuf []types.Byte) CommandResult
 }

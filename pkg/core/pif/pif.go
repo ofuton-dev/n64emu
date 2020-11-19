@@ -97,7 +97,7 @@ func (pif *PIF) communicateEEPROM(channel types.Byte, txBuf, rxBuf []types.Byte)
 	assert.Assert((cmd != joybus.ReadButtonValues) && (cmd != joybus.ReadFromMempackSlot) && (cmd != joybus.WriteToMempackSlot), "Do not send controller commands to eeprom")
 
 	// channel=4 or 5
-	assert.Assert((PIFNumOfController < channel) && (channel < PIFNumOfController+PIFNumOfEEPROM), "channel is out of bounds.")
+	assert.Assert((PIFNumOfController <= channel) && (channel < PIFNumOfController+PIFNumOfEEPROM), "channel is out of bounds.")
 	eepromIndex := channel - PIFNumOfController
 
 	// No connection
