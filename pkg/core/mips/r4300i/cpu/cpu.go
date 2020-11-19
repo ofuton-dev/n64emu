@@ -92,22 +92,22 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			util.TODO("BREAK")
 		case 0x0F:
 			util.TODO("SYNC")
-		case 0x10:
-			util.TODO("MFHI")
-		case 0x11:
-			util.TODO("MTHI")
-		case 0x12:
-			util.TODO("MFLO")
-		case 0x13:
-			util.TODO("MTLO")
-		case 0x14:
-			util.TODO("DSLLV")
-		case 0x16:
-			util.TODO("DSRLV")
-		case 0x17:
-			util.TODO("DSRAV")
-		case 0x18:
-			util.TODO("MULT")
+		case 0x10: /// MFHI
+			return mfhi(c.hi, &instR)
+		case 0x11: // MTHI
+			return mthi(&c.gpr, &c.hi, &instR)
+		case 0x12: // MFLO
+			return mflo(c.lo, &instR)
+		case 0x13: // MTLO
+			return mtlo(&c.gpr, &c.lo, &instR)
+		case 0x14: // DSLLV
+			return dsllv(&c.gpr, &instR)
+		case 0x16: // DSRLV
+			return dsrlv(&c.gpr, &instR)
+		case 0x17: // DSRAV
+			return dsrav(&c.gpr, &instR)
+		case 0x18: // MULT
+			return mult(&c.gpr, &c.hi, &c.lo, &instR)
 		case 0x19:
 			util.TODO("MULTU")
 		case 0x1A:

@@ -64,6 +64,80 @@ func srav(gpr *reg.GPR, inst *InstR) *aluOutput {
 	}
 }
 
+// MFHI rd
+// Transfers the contents of special register HI to register rd.
+func mfhi(hi types.DoubleWord, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: hi,
+	}
+}
+
+// MFLO rd
+// Transfers the contents of special register LO to register rd.
+func mflo(lo types.DoubleWord, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: lo,
+	}
+}
+
+// MTHI rs
+// Transfers the contents of register rs to special register HI.
+func mthi(gpr *reg.GPR, hi *types.DoubleWord, inst *InstR) *aluOutput {
+	// TODO: We need to do some investigation about write back timing
+	*hi = types.DoubleWord(gpr.Read(inst.Rs))
+	return nil
+}
+
+// MTLO rs
+// Transfers the contents of register rs to special register LO.
+func mtlo(gpr *reg.GPR, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	// TODO: We need to do some investigation about write back timing
+	*lo = types.DoubleWord(gpr.Read(inst.Rs))
+	return nil
+}
+
+// DSLLV rd, rt, rs
+// Shifts the contents of register rt to the left, and inserts 0 to the low-order bits.
+func dsllv(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: types.DoubleWord((gpr.Read(inst.Rt)) << (inst.Rs & 0x3F)),
+	}
+}
+
+// DSRLV rd, rt, rs
+// Shifts the contents of register rt to the right, and inserts 0 to the higher bits.
+func dsrlv(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: types.DoubleWord((gpr.Read(inst.Rt)) >> (inst.Rs & 0x3F)),
+	}
+}
+
+// DSRAV rd, rt, rs
+// Shifts the contents of register rt to the right, and sign-extends the high-order bits.
+func dsrav(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: types.DoubleWord(int64(gpr.Read(inst.Rt)) >> (inst.Rs & 0x3F)),
+	}
+}
+
+// MULT rs, rt
+// Multiplies the contents of register rs by the contents of register rt as a 32-bit signed integer.
+func mult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	result := types.DoubleWord(int64(gpr.Read(inst.Rt)) * int64(gpr.Read(inst.Rs)))
+	// TODO: We need to do some investigation about write back timing
+	// .     Should we add 20 cycle delay for 64bit mode?
+	//       ref. https://en.wikipedia.org/wiki/R4000#Integer_execution
+	// .     See also, https://github.com/ofuton-dev/n64emu/pull/18
+	*hi = result >> 32
+	*lo = result & 0xFFFFFFFF
+	return nil
+}
+
 func or(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
 		dest:   inst.Rd,
