@@ -18,6 +18,17 @@ const (
 	Reset               = CommandType(0xff)
 )
 
+// Device Identifier
+type Identifier types.HalfWord
+
+const (
+	Controller           = Identifier(0x0500)
+	VoiceRecognitionUnit = Identifier(0x0001)
+	Mouse                = Identifier(0x0200)
+	Keyboard             = Identifier(0x0002)
+	TrainController      = Identifier(0x2004)
+)
+
 // Command processing result
 type CommandResult types.Byte
 
