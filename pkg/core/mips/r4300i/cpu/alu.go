@@ -1,7 +1,6 @@
 package cpu
 
 import (
-	"fmt"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 )
@@ -32,7 +31,6 @@ func srl(gpr *reg.GPR, inst *InstR) *aluOutput {
 // SRA rd, rt, sa
 // Shifts the contents of register rt sa bits to the right, and sign-extends the high- order bits.
 func sra(gpr *reg.GPR, inst *InstR) *aluOutput {
-	fmt.Println("sra", inst.Rd)
 	return &aluOutput{
 		dest:   inst.Rd,
 		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> inst.Sa),
@@ -200,9 +198,42 @@ func divu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR)
 	return nil
 }
 
+// OR rd, rs, rt
+// ORs the contents of registers rs and rt in bit units, and stores the result to
+// register rd.
 func or(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
 		dest:   inst.Rd,
 		result: types.DoubleWord(gpr.Read(inst.Rs) | gpr.Read(inst.Rt)),
+	}
+}
+
+// AND rd, rs, rt
+// ANDs the contents of registers rs and rt in bit units, and stores the result to
+// register rd.
+func and(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: types.DoubleWord(gpr.Read(inst.Rs) & gpr.Read(inst.Rt)),
+	}
+}
+
+// XOR rd, rs, rt
+// Exclusive-ORs the contents of registers rs and rt in bit units, and stores the
+// result to register rd.
+func xor(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: types.DoubleWord(gpr.Read(inst.Rs) ^ gpr.Read(inst.Rt)),
+	}
+}
+
+// NOR rd, rs, rt
+// NORs the contents of registers rs and rt in bit units, and stores the result to
+// register rd
+func nor(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: ^(types.DoubleWord(gpr.Read(inst.Rs) | gpr.Read(inst.Rt))),
 	}
 }

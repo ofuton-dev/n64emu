@@ -2,7 +2,6 @@ package cpu
 
 import (
 	"encoding/binary"
-	"fmt"
 	"n64emu/pkg/types"
 	"testing"
 
@@ -55,7 +54,6 @@ func beOpcodes2bytes(opecodes ...types.Word) []types.Byte {
 		binary.BigEndian.PutUint32(bytes, o)
 		res = append(res, bytes...)
 	}
-	fmt.Println(res)
 	return res
 }
 

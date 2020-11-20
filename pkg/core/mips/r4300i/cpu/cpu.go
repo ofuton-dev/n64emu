@@ -129,14 +129,14 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			util.TODO("SUB")
 		case 0x23:
 			util.TODO("SUBU")
-		case 0x24:
-			util.TODO("AND")
+		case 0x24: // AND
+			return and(&c.gpr, &instR)
 		case 0x25: // OR
 			return or(&c.gpr, &instR)
-		case 0x26:
-			util.TODO("XOR")
-		case 0x27:
-			util.TODO("NOR")
+		case 0x26: // XOR
+			return xor(&c.gpr, &instR)
+		case 0x27: // NOR
+			return nor(&c.gpr, &instR)
 		case 0x2A:
 			util.TODO("SLT")
 		case 0x2B:
