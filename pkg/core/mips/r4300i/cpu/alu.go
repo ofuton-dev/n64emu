@@ -160,6 +160,20 @@ func mult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR)
 	return nil
 }
 
+// MULTU rs, rt
+// The contents of general purpose register rs and the contents of general purpose
+// register rt are multiplied, treating both operands as 32-bit unsigned values.
+func multu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	result := types.DoubleWord(gpr.Read(inst.Rt) * gpr.Read(inst.Rs))
+	// TODO: We need to do some investigation about write back timing
+	// .     Should we add 20 cycle delay for 64bit mode?
+	//       ref. https://en.wikipedia.org/wiki/R4000#Integer_execution
+	// .     See also, https://github.com/ofuton-dev/n64emu/pull/18
+	*hi = result >> 32
+	*lo = result & 0xFFFFFFFF
+	return nil
+}
+
 func or(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
 		dest:   inst.Rd,

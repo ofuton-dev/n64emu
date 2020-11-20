@@ -109,8 +109,8 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			return dsrav(&c.gpr, &instR)
 		case 0x18: // MULT
 			return mult(&c.gpr, &c.hi, &c.lo, &instR)
-		case 0x19:
-			util.TODO("MULTU")
+		case 0x19: // MULTU
+			return multu(&c.gpr, &c.hi, &c.lo, &instR)
 		case 0x1A:
 			util.TODO("DIV")
 		case 0x1B:
