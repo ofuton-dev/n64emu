@@ -8,12 +8,12 @@ import (
 
 // Pipeline is vr4300 pipeline module
 type Pipeline struct {
-	bus                bus.Bus // Bus accessor
-	icLatchedPC        types.DoubleWord
-	registerFetchReady bool
-	registerFetchLatch *types.Word
-	executionLatch     *aluOutput
-	dataCacheLatch     *aluOutput
+	bus                        bus.Bus // Bus accessor
+	instructionCacheFetchLatch types.DoubleWord
+	registerFetchReady         bool
+	registerFetchLatch         *types.Word
+	executionLatch             *aluOutput
+	dataCacheLatch             *aluOutput
 }
 
 // NewPipeline is Pipeline constructor
@@ -59,7 +59,7 @@ func (p *Pipeline) executionStage(execute func(types.Word) *aluOutput) {
 // RF - Register Fetch
 func (p *Pipeline) registerFetchStage(fetch func(addr types.DoubleWord) types.Word) {
 	if p.registerFetchReady {
-		opcode := fetch(p.icLatchedPC)
+		opcode := fetch(p.instructionCacheFetchLatch)
 		p.registerFetchLatch = &opcode
 	}
 
@@ -67,7 +67,7 @@ func (p *Pipeline) registerFetchStage(fetch func(addr types.DoubleWord) types.Wo
 
 // IC - Instruction Cache Fetch
 func (p *Pipeline) instructionCacheFetchStage(pc *types.DoubleWord) {
-	p.icLatchedPC = *pc
+	p.instructionCacheFetchLatch = *pc
 	p.registerFetchReady = true
 	*pc += 4
 }

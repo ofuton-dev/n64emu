@@ -1,7 +1,6 @@
 package cpu
 
 import (
-	"fmt"
 	"n64emu/pkg/core/bus"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
@@ -45,7 +44,6 @@ func (c *CPU) endian() types.Endianness {
 }
 
 func (c *CPU) fetch(addr types.DoubleWord) types.Word {
-	fmt.Println("aaa", addr)
 	data := c.bus.ReadWord(c.endian(), types.Word(addr))
 	return data
 }
@@ -111,10 +109,10 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			return mult(&c.gpr, &c.hi, &c.lo, &instR)
 		case 0x19: // MULTU
 			return multu(&c.gpr, &c.hi, &c.lo, &instR)
-		case 0x1A:
-			util.TODO("DIV")
-		case 0x1B:
-			util.TODO("DIVU")
+		case 0x1A: // DIV
+			return div(&c.gpr, &c.hi, &c.lo, &instR)
+		case 0x1B: // DIVU
+			return divu(&c.gpr, &c.hi, &c.lo, &instR)
 		case 0x1C:
 			util.TODO("DMULT")
 		case 0x1D:

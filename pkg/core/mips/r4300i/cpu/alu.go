@@ -149,6 +149,7 @@ func dsrav(gpr *reg.GPR, inst *InstR) *aluOutput {
 
 // MULT rs, rt
 // Multiplies the contents of register rs by the contents of register rt as a 32-bit signed integer.
+// Number of required cycles 5
 func mult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
 	result := types.DoubleWord(int64(gpr.Read(inst.Rt)) * int64(gpr.Read(inst.Rs)))
 	// TODO: We need to do some investigation about write back timing
@@ -163,6 +164,7 @@ func mult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR)
 // MULTU rs, rt
 // The contents of general purpose register rs and the contents of general purpose
 // register rt are multiplied, treating both operands as 32-bit unsigned values.
+// Number of required cycles 5
 func multu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
 	result := types.DoubleWord(gpr.Read(inst.Rt) * gpr.Read(inst.Rs))
 	// TODO: We need to do some investigation about write back timing
@@ -171,6 +173,30 @@ func multu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR
 	// .     See also, https://github.com/ofuton-dev/n64emu/pull/18
 	*hi = result >> 32
 	*lo = result & 0xFFFFFFFF
+	return nil
+}
+
+// DIV rs, rt
+// Divides the contents of register rs by the contents of register rt. The operand
+// is treated as a 32-bit signed integer.
+// Number of required cycles 37
+func div(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rs := int32(gpr.Read(inst.Rs))
+	rt := int32(gpr.Read(inst.Rt))
+	*hi = types.DoubleWord(rs / rt)
+	*lo = types.DoubleWord(rs % rt)
+	return nil
+}
+
+// DIVU rs, rt
+// The contents of general purpose register rs are divided by the contents of general
+// purpose register rt, treating both operands as unsigned integers.
+// Number of required cycles 37
+func divu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rs := types.Word(gpr.Read(inst.Rs))
+	rt := types.Word(gpr.Read(inst.Rt))
+	*hi = types.DoubleWord(rs / rt)
+	*lo = types.DoubleWord(rs % rt)
 	return nil
 }
 
