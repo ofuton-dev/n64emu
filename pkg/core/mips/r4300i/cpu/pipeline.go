@@ -9,6 +9,7 @@ import (
 // Pipeline is vr4300 pipeline module
 type Pipeline struct {
 	bus                bus.Bus // Bus accessor
+	icLatchedPC        types.DoubleWord
 	registerFetchReady bool
 	registerFetchLatch *types.Word
 	executionLatch     *aluOutput
@@ -22,7 +23,8 @@ func NewPipeline(bus bus.Bus) *Pipeline {
 	}
 }
 
-func (p *Pipeline) step(gpr *reg.GPR, execute func(types.Word) *aluOutput, fetch func() types.Word) {
+// TODO: Refactor later.
+func (p *Pipeline) step(pc *types.DoubleWord, gpr *reg.GPR, execute func(types.Word) *aluOutput, fetch func(addr types.DoubleWord) types.Word) {
 	// TODO: We need to consider about pipeline exception, branch delay, load delay and etc...
 	p.writeBackStage(gpr)
 
@@ -32,7 +34,7 @@ func (p *Pipeline) step(gpr *reg.GPR, execute func(types.Word) *aluOutput, fetch
 
 	p.registerFetchStage(fetch)
 
-	p.instructionCacheFetchStage()
+	p.instructionCacheFetchStage(pc)
 }
 
 // WB - Write Back
@@ -55,16 +57,17 @@ func (p *Pipeline) executionStage(execute func(types.Word) *aluOutput) {
 }
 
 // RF - Register Fetch
-func (p *Pipeline) registerFetchStage(fetch func() types.Word) {
+func (p *Pipeline) registerFetchStage(fetch func(addr types.DoubleWord) types.Word) {
 	if p.registerFetchReady {
-		opcode := fetch()
+		opcode := fetch(p.icLatchedPC)
 		p.registerFetchLatch = &opcode
 	}
 
 }
 
 // IC - Instruction Cache Fetch
-func (p *Pipeline) instructionCacheFetchStage() {
+func (p *Pipeline) instructionCacheFetchStage(pc *types.DoubleWord) {
+	p.icLatchedPC = *pc
 	p.registerFetchReady = true
-	// TODO: NOP for now
+	*pc += 4
 }

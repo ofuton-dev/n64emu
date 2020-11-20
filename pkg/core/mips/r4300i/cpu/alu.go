@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"fmt"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 )
@@ -31,6 +32,7 @@ func srl(gpr *reg.GPR, inst *InstR) *aluOutput {
 // SRA rd, rt, sa
 // Shifts the contents of register rt sa bits to the right, and sign-extends the high- order bits.
 func sra(gpr *reg.GPR, inst *InstR) *aluOutput {
+	fmt.Println("sra", inst.Rd)
 	return &aluOutput{
 		dest:   inst.Rd,
 		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> inst.Sa),
@@ -61,6 +63,26 @@ func srav(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
 		dest:   inst.Rd,
 		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> (inst.Rs & 0x1F)),
+	}
+}
+
+// JR rs
+// Jumps to the address of register rs, delayed by one instruction.
+func jr(pc *types.DoubleWord, gpr *reg.GPR, inst *InstR) *aluOutput {
+	*pc = gpr.Read(inst.Rs)
+	return nil
+}
+
+// JALR rs, rd
+// Jumps to the address of register rs, delayed by one instruction.
+// Stores the address of the instruction following the delay slot to register rd.
+// See also U10504EJ7V0UM00 p98
+func jalr(pc *types.DoubleWord, gpr *reg.GPR, inst *InstR) *aluOutput {
+	result := *pc + 8
+	*pc = gpr.Read(inst.Rs)
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: result,
 	}
 }
 

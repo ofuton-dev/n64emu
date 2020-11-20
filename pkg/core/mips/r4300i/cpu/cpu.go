@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"fmt"
 	"n64emu/pkg/core/bus"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
@@ -43,9 +44,9 @@ func (c *CPU) endian() types.Endianness {
 	return types.Big
 }
 
-func (c *CPU) fetch() types.Word {
-	data := c.bus.ReadWord(c.endian(), types.Word(c.pc))
-	c.pc += 4
+func (c *CPU) fetch(addr types.DoubleWord) types.Word {
+	fmt.Println("aaa", addr)
+	data := c.bus.ReadWord(c.endian(), types.Word(addr))
 	return data
 }
 
@@ -53,7 +54,7 @@ func (c *CPU) fetch() types.Word {
 func (c *CPU) Step() {
 	// TODO: We need to consider about `pipline`.
 	//       Implement later here.
-	c.pipeline.step(&c.gpr, c.execute, c.fetch)
+	c.pipeline.step(&c.pc, &c.gpr, c.execute, c.fetch)
 }
 
 // RunUntil runs CPU until specified cycles
@@ -84,10 +85,10 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			return srlv(&c.gpr, &instR)
 		case 0x07: // SRAV
 			return srav(&c.gpr, &instR)
-		case 0x08:
-			util.TODO("JR")
-		case 0x09:
-			util.TODO("JALR")
+		case 0x08: // JR
+			return jr(&c.pc, &c.gpr, &instR)
+		case 0x09: // JALR
+			return jalr(&c.pc, &c.gpr, &instR)
 		case 0x0D:
 			util.TODO("BREAK")
 		case 0x0F:
