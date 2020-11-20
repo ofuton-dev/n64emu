@@ -29,76 +29,81 @@ const (
 
 // N64 Standard Controller
 type Controller struct {
-	// byte0:[A,B,Z,S,dU,dD,dL,DR], byte1:[]
+	// byte0:[A,B,Z,S,dU,dD,dL,dR], byte1:[Rst, ,L, R, cU, cD, cL, cR]
 	buttonStatus types.HalfWord
-	// byte2:[X-Axis]
-	XAxis types.Byte
-	// byte3:[Y-Axis]
+	// byte2:[X-Axis], 2's complement format
+	xAxis types.Byte
+	// byte3:[Y-Axis], 2's complement format
 	yAxis types.Byte
-	// accessory port in the controller (e.g. RumblePak, ControllerPak,...)
-	accessory *joybus.JoyBus
+	// pak port in the controller (e.g. RumblePak, ControllerPak,...)
+	pak *joybus.JoyBus
 }
 
 // Controller constructor
 func NewController() *Controller {
 	c := &Controller{
 		buttonStatus: 0,
-		XAxis:        0,
+		xAxis:        0,
 		yAxis:        0,
-		accessory:    nil,
+		pak:          nil,
 	}
 	return c
 }
 
 // Attach accessory
-func (c *Controller) AttachAccessory(accessory *joybus.JoyBus) {
-	c.accessory = accessory
+func (c *Controller) AttachPak(pak *joybus.JoyBus) {
+	c.pak = pak
 }
 
 // Remove accessory
-func (c *Controller) RemoveAccessory(accessory *joybus.JoyBus) {
-	c.accessory = accessory
+func (c *Controller) RemovePak(pak *joybus.JoyBus) {
+	c.pak = pak
 }
 
 // Initialize the variables
 func (c *Controller) Reset() {
 	c.buttonStatus = 0x0
-	c.XAxis = 0
+	c.xAxis = 0
 	c.yAxis = 0
 
-	if c.accessory != nil {
-		(*c.accessory).Reset()
+	if c.pak != nil {
+		(*c.pak).Reset()
 	}
 }
 
 // Update the user input
-func (c *Controller) Input(buttonStatus types.HalfWord, xAxis, yAxis types.Byte) {
+func (c *Controller) Input(buttonStatus types.HalfWord, xAxis, yAxis types.SByte) {
 	c.buttonStatus = buttonStatus
-	c.XAxis = xAxis
-	c.yAxis = yAxis
+	c.xAxis = types.Byte(xAxis)
+	c.yAxis = types.Byte(yAxis)
 }
 
 // Responding Device Identifier
+// rxBuf = { Controller ID High(0x05), Controller ID Low(0x00), Pak connected }
 func (c *Controller) readInfo(rxBuf []types.Byte) joybus.CommandResult {
 	rxLen := len(rxBuf)
 
 	// byte0
+	if rxLen < 1 {
+		return joybus.Success
+	}
+	rxBuf[0] = types.Byte((joybus.Controller >> 8) & 0xff)
+
+	// byte1
 	if rxLen < 2 {
 		return joybus.Success
 	}
-	rxBuf[0] = types.Byte((joybus.Controller >> 16) & 0xff)
+	rxBuf[1] = types.Byte((joybus.Controller >> 0) & 0xff)
 
-	// byte1
+	// byte2
 	if rxLen < 3 {
 		return joybus.Success
 	}
-	rxBuf[1] = types.Byte((joybus.Controller >> 8) & 0xff)
-
-	// byte2
-	if rxLen < 4 {
-		return joybus.Success
+	if c.pak == nil {
+		rxBuf[2] = 0x0
+	} else {
+		rxBuf[2] = 0x1
 	}
-	rxBuf[2] = types.Byte((joybus.Controller >> 0) & 0xff)
 
 	// No more data can respond
 	if rxLen >= 4 {
@@ -113,28 +118,28 @@ func (c *Controller) readInputStatus(rxBuf []types.Byte) joybus.CommandResult {
 	rxLen := len(rxBuf)
 
 	// byte0
-	if rxLen < 2 {
+	if rxLen < 1 {
 		return joybus.Success
 	}
 	rxBuf[0] = types.Byte((c.buttonStatus >> 8) & 0xff)
 
 	// byte1
+	if rxLen < 2 {
+		return joybus.Success
+	}
+	rxBuf[1] = types.Byte((c.buttonStatus >> 0) & 0xff)
+
+	// byte2
 	if rxLen < 3 {
 		return joybus.Success
 	}
-	rxBuf[0] = types.Byte((c.buttonStatus >> 0) & 0xff)
+	rxBuf[2] = c.xAxis
 
-	// byte2
+	// byte3
 	if rxLen < 4 {
 		return joybus.Success
 	}
-	rxBuf[2] = c.XAxis
-
-	// byte3
-	if rxLen < 5 {
-		return joybus.Success
-	}
-	rxBuf[3] = c.XAxis
+	rxBuf[3] = c.yAxis
 
 	// No more data can respond
 	if rxLen >= 5 {
@@ -167,10 +172,10 @@ func (c *Controller) Run(cmd joybus.CommandType, txBuf, rxBuf []types.Byte) joyb
 	case joybus.ReadFromMempackSlot: // Connection to the accessory port
 		fallthrough
 	case joybus.WriteToMempackSlot: // Connection to the accessory port
-		if c.accessory == nil {
+		if c.pak == nil {
 			return joybus.DeviceNotPresent
 		}
-		return (*c.accessory).Run(cmd, txBuf, rxBuf)
+		return (*c.pak).Run(cmd, txBuf, rxBuf)
 
 	default:
 		assert.Assert(false, "Unsupported command")
