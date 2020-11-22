@@ -12,8 +12,6 @@ import (
 const (
 	// 1 Block = 8 bytes
 	BlockSize = 8
-	// CmdId + Block Offset
-	TxHeaderOffset = 2
 )
 
 // External non-volatile memory connected with joybus.
@@ -55,7 +53,7 @@ func (m *NVMem) FromFile(binPath string) error {
 	return nil
 }
 
-func (m *NVMem) Read(blockOffset types.Byte, rxBuf []types.Byte) joybus.CommandResult {
+func (m *NVMem) Read(blockOffset types.HalfWord, rxBuf []types.Byte) joybus.CommandResult {
 	assert.AssertNe(0, len(m.Data), "Data is not initialized.")
 
 	byteOffset := blockOffset / BlockSize
@@ -74,11 +72,11 @@ func (m *NVMem) Read(blockOffset types.Byte, rxBuf []types.Byte) joybus.CommandR
 	return joybus.Success
 }
 
-func (m *NVMem) Write(blockOffset types.Byte, txBuf []types.Byte) joybus.CommandResult {
+func (m *NVMem) Write(blockOffset types.HalfWord, txBuf []types.Byte) joybus.CommandResult {
 	assert.AssertNe(0, len(m.Data), "Data is not initialized.")
 
 	byteOffset := blockOffset / BlockSize
-	for txIndex := 0; txIndex+TxHeaderOffset < len(txBuf); txIndex++ {
+	for txIndex := 0; txIndex < len(txBuf); txIndex++ {
 		address := int(byteOffset) + txIndex
 
 		// boundary check
@@ -88,7 +86,7 @@ func (m *NVMem) Write(blockOffset types.Byte, txBuf []types.Byte) joybus.Command
 		}
 
 		// data copy
-		m.Data[address] = txBuf[TxHeaderOffset+txIndex] // 2 byte = [cmd + block offset]
+		m.Data[address] = txBuf[txIndex]
 	}
 	return joybus.Success
 }

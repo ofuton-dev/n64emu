@@ -22,6 +22,7 @@ const (
 type Identifier types.HalfWord
 
 const (
+	CartEEPROM           = Identifier(0x0080)
 	Controller           = Identifier(0x0500)
 	VoiceRecognitionUnit = Identifier(0x0001)
 	Mouse                = Identifier(0x0200)
