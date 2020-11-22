@@ -64,6 +64,26 @@ func srav(gpr *reg.GPR, inst *InstR) *aluOutput {
 	}
 }
 
+// JR rs
+// Jumps to the address of register rs, delayed by one instruction.
+func jr(pc *types.DoubleWord, gpr *reg.GPR, inst *InstR) *aluOutput {
+	*pc = gpr.Read(inst.Rs)
+	return nil
+}
+
+// JALR rs, rd
+// Jumps to the address of register rs, delayed by one instruction.
+// Stores the address of the instruction following the delay slot to register rd.
+// See also U10504EJ7V0UM00 p98
+func jalr(pc *types.DoubleWord, gpr *reg.GPR, inst *InstR) *aluOutput {
+	result := *pc + 8
+	*pc = gpr.Read(inst.Rs)
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: result,
+	}
+}
+
 // MFHI rd
 // Transfers the contents of special register HI to register rd.
 func mfhi(hi types.DoubleWord, inst *InstR) *aluOutput {
@@ -127,6 +147,7 @@ func dsrav(gpr *reg.GPR, inst *InstR) *aluOutput {
 
 // MULT rs, rt
 // Multiplies the contents of register rs by the contents of register rt as a 32-bit signed integer.
+// Number of required cycles 5
 func mult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
 	result := types.DoubleWord(int64(gpr.Read(inst.Rt)) * int64(gpr.Read(inst.Rs)))
 	// TODO: We need to do some investigation about write back timing
@@ -138,9 +159,81 @@ func mult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR)
 	return nil
 }
 
+// MULTU rs, rt
+// The contents of general purpose register rs and the contents of general purpose
+// register rt are multiplied, treating both operands as 32-bit unsigned values.
+// Number of required cycles 5
+func multu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	result := types.DoubleWord(gpr.Read(inst.Rt) * gpr.Read(inst.Rs))
+	// TODO: We need to do some investigation about write back timing
+	// .     Should we add 20 cycle delay for 64bit mode?
+	//       ref. https://en.wikipedia.org/wiki/R4000#Integer_execution
+	// .     See also, https://github.com/ofuton-dev/n64emu/pull/18
+	*hi = result >> 32
+	*lo = result & 0xFFFFFFFF
+	return nil
+}
+
+// DIV rs, rt
+// Divides the contents of register rs by the contents of register rt. The operand
+// is treated as a 32-bit signed integer.
+// Number of required cycles 37
+func div(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rs := int32(gpr.Read(inst.Rs))
+	rt := int32(gpr.Read(inst.Rt))
+	*hi = types.DoubleWord(rs / rt)
+	*lo = types.DoubleWord(rs % rt)
+	return nil
+}
+
+// DIVU rs, rt
+// The contents of general purpose register rs are divided by the contents of general
+// purpose register rt, treating both operands as unsigned integers.
+// Number of required cycles 37
+func divu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rs := types.Word(gpr.Read(inst.Rs))
+	rt := types.Word(gpr.Read(inst.Rt))
+	*hi = types.DoubleWord(rs / rt)
+	*lo = types.DoubleWord(rs % rt)
+	return nil
+}
+
+// OR rd, rs, rt
+// ORs the contents of registers rs and rt in bit units, and stores the result to
+// register rd.
 func or(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
 		dest:   inst.Rd,
 		result: types.DoubleWord(gpr.Read(inst.Rs) | gpr.Read(inst.Rt)),
+	}
+}
+
+// AND rd, rs, rt
+// ANDs the contents of registers rs and rt in bit units, and stores the result to
+// register rd.
+func and(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: types.DoubleWord(gpr.Read(inst.Rs) & gpr.Read(inst.Rt)),
+	}
+}
+
+// XOR rd, rs, rt
+// Exclusive-ORs the contents of registers rs and rt in bit units, and stores the
+// result to register rd.
+func xor(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: types.DoubleWord(gpr.Read(inst.Rs) ^ gpr.Read(inst.Rt)),
+	}
+}
+
+// NOR rd, rs, rt
+// NORs the contents of registers rs and rt in bit units, and stores the result to
+// register rd
+func nor(gpr *reg.GPR, inst *InstR) *aluOutput {
+	return &aluOutput{
+		dest:   inst.Rd,
+		result: ^(types.DoubleWord(gpr.Read(inst.Rs) | gpr.Read(inst.Rt))),
 	}
 }
