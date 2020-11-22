@@ -85,6 +85,11 @@ func (e *EEPROM) Run(cmd joybus.CommandType, txBuf, rxBuf []types.Byte) joybus.C
 	blockOffset := types.HalfWord(txBuf[1])
 
 	switch cmd {
+	case joybus.Reset:
+		e.Reset()
+		return e.readInfo(rxBuf)
+	case joybus.RequestInfo:
+		return e.readInfo(rxBuf)
 	case joybus.ReadEEPROM:
 		return e.ROM.Read(blockOffset, rxBuf)
 	case joybus.WriteEEPROM:
