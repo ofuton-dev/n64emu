@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"n64emu/pkg/core"
-	"n64emu/pkg/core/rom"
+	"n64emu/pkg/core/cart/rom"
 	"os"
 )
 
