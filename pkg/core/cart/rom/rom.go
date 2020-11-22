@@ -194,7 +194,7 @@ func repairOrder(src []types.Byte) error {
 }
 
 // Read from ROM file
-func NewRom(romPath string) (ROM, error) {
+func NewRom(romPath string) (*ROM, error) {
 	dst := ROM{
 		RomPath: romPath,
 	}
@@ -202,26 +202,26 @@ func NewRom(romPath string) (ROM, error) {
 	info, err := os.Stat(romPath)
 	// not found
 	if os.IsNotExist(err) {
-		return dst, err
+		return &dst, err
 	}
 	// not file
 	if info.IsDir() {
-		return dst, errors.New("romPath is directory")
+		return &dst, errors.New("romPath is directory")
 	}
 	// No data for the ROM Header
 	if info.Size() < RomHeaderSize {
-		return dst, errors.New("The size is less than 4096 bytes")
+		return &dst, errors.New("The size is less than 4096 bytes")
 	}
 
 	// Read from file
 	src, err := ioutil.ReadFile(romPath)
 	if err != nil {
-		return dst, err
+		return &dst, err
 	}
 
 	// Detect identifier. repair rom endian and byte-swapped.
 	if err := repairOrder(src); err != nil {
-		return dst, err
+		return &dst, err
 	}
 
 	// Parse cartridge rom header and data
@@ -239,5 +239,5 @@ func NewRom(romPath string) (ROM, error) {
 	dst.Data = src[RomHeaderSize:]               // 0x1000 ~ File End
 
 	// done.
-	return dst, nil
+	return &dst, nil
 }
