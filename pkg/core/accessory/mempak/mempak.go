@@ -1,4 +1,4 @@
-package ctrlpak
+package mempak
 
 import (
 	"n64emu/pkg/core/common/nvmem"
@@ -17,15 +17,15 @@ const (
 )
 
 // External storage memory, available for connection to the controller's expansion port.
-type CtrlPAK struct {
+type MEMPAK struct {
 	// Battery-backed RAM
 	RAM nvmem.NVMem
 }
 
 // Read from binary file
 // If you specify nil for binPath, it will be initialized with 0
-func NewCtrlPak(binPath string) (*CtrlPAK, error) {
-	dst := CtrlPAK{}
+func NewMEMPak(binPath string) (*MEMPAK, error) {
+	dst := MEMPAK{}
 	dst.RAM.Init(RAMSize)
 
 	// Allocate only
@@ -41,12 +41,12 @@ func NewCtrlPak(binPath string) (*CtrlPAK, error) {
 
 // Do nothing
 // Data are not cleared because are backed up by batteries.
-func (pak *CtrlPAK) Reset() {
+func (pak *MEMPAK) Reset() {
 	// do nothing
 }
 
 // Do Command
-func (pak *CtrlPAK) Run(cmd joybus.CommandType, txBuf, rxBuf []types.Byte) joybus.CommandResult {
+func (pak *MEMPAK) Run(cmd joybus.CommandType, txBuf, rxBuf []types.Byte) joybus.CommandResult {
 	// block offset and crc not found
 	if len(txBuf) < TxHeaderOffset {
 		assert.Assert(false, "block offset and crc are not included in the sent data.")
