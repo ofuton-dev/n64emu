@@ -16,6 +16,9 @@ type MockJoyBusDevice struct {
 	readDatas []types.Byte
 }
 
+func (m *MockJoyBusDevice) Reset() {
+}
+
 func (m *MockJoyBusDevice) Run(cmd joybus.CommandType, txBuf, rxBuf []types.Byte) joybus.CommandResult {
 	if cmd != m.wantCmd {
 		return joybus.DeviceNotPresent
