@@ -56,7 +56,7 @@ func (m *NVMem) FromFile(binPath string) error {
 func (m *NVMem) Read(blockOffset types.HalfWord, rxBuf []types.Byte) joybus.CommandResult {
 	assert.AssertNe(0, len(m.Data), "Data is not initialized.")
 
-	byteOffset := blockOffset / BlockSize
+	byteOffset := blockOffset * BlockSize
 	for rxIndex := 0; rxIndex < len(rxBuf); rxIndex++ {
 		address := int(byteOffset) + rxIndex
 
@@ -75,7 +75,7 @@ func (m *NVMem) Read(blockOffset types.HalfWord, rxBuf []types.Byte) joybus.Comm
 func (m *NVMem) Write(blockOffset types.HalfWord, txBuf []types.Byte) joybus.CommandResult {
 	assert.AssertNe(0, len(m.Data), "Data is not initialized.")
 
-	byteOffset := blockOffset / BlockSize
+	byteOffset := blockOffset * BlockSize
 	for txIndex := 0; txIndex < len(txBuf); txIndex++ {
 		address := int(byteOffset) + txIndex
 
