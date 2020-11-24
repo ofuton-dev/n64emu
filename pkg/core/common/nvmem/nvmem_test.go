@@ -12,14 +12,60 @@ func TestAllRangeWR(t *testing.T) {
 	m := NVMem{}
 	m.Init(size)
 
-	// All range seq write
+	// Write incremental pattern
 	initData := make([]types.Byte, size)
 	for i := 0; i < len(initData); i++ {
 		initData[i] = types.Byte(i)
 	}
 	m.Write(0, initData)
 
-	// All range seq read
+	// Read all range
+	readData := make([]types.Byte, size)
+	m.Read(0, readData)
+	assert.Equal(t, initData, readData)
+}
+
+func TestScatterRead(t *testing.T) {
+	size := 256
+	readBytes := 8
+	m := NVMem{}
+	m.Init(size)
+
+	// Write incremental pattern
+	initData := make([]types.Byte, size)
+	for i := 0; i < len(initData); i++ {
+		initData[i] = types.Byte(i)
+	}
+	m.Write(0, initData)
+
+	// Split and read all range
+	for i := 0; i < len(initData)/BlockSize; i++ {
+		blockOffset := types.HalfWord(i)
+		readData := make([]types.Byte, readBytes)
+		m.Read(blockOffset, readData)
+		assert.Equal(t, initData[i*BlockSize:i*BlockSize+readBytes], readData)
+	}
+}
+
+func TestScatterWrite(t *testing.T) {
+	size := 256
+	writeBytes := 8
+	m := NVMem{}
+	m.Init(size)
+
+	// Split and write incremental pattern
+	initData := make([]types.Byte, size)
+	for i := 0; i < len(initData)/BlockSize; i++ {
+		blockOffset := types.HalfWord(i)
+		writeData := make([]types.Byte, writeBytes)
+		for j := 0; j < writeBytes; j++ {
+			writeData[j] = types.Byte(i*BlockSize + j)
+			initData[i*BlockSize+j] = writeData[j]
+		}
+		m.Write(blockOffset, writeData)
+	}
+
+	// Read all range
 	readData := make([]types.Byte, size)
 	m.Read(0, readData)
 	assert.Equal(t, initData, readData)
