@@ -21,7 +21,7 @@ type NVMem struct {
 }
 
 // Allocate Data Buffer
-func (m *NVMem) Init(size uint) {
+func (m *NVMem) Init(size int) {
 	m.Data = make([]types.Byte, size)
 }
 
