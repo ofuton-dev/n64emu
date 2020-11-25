@@ -1,7 +1,9 @@
 package nvmem
 
 import (
+	"io/ioutil"
 	"n64emu/pkg/types"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -64,6 +66,29 @@ func TestScatterWrite(t *testing.T) {
 		}
 		m.Write(blockOffset, writeData)
 	}
+
+	// Read all range
+	readData := make([]types.Byte, size)
+	m.Read(0, readData)
+	assert.Equal(t, initData, readData)
+}
+
+func TestFromFile(t *testing.T) {
+	dummyFile := "testfromfile.tmp"
+	size := 256
+
+	// Create test file
+	initData := make([]types.Byte, size)
+	for i := 0; i < len(initData); i++ {
+		initData[i] = types.Byte(i)
+	}
+	ioutil.WriteFile(dummyFile, initData, 0644)
+	defer os.Remove(dummyFile)
+
+	// Init and read from file
+	m := NVMem{}
+	m.Init(size)
+	m.FromFile(dummyFile)
 
 	// Read all range
 	readData := make([]types.Byte, size)
