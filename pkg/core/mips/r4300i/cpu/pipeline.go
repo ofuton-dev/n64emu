@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"fmt"
 	"n64emu/pkg/core/bus"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
@@ -65,7 +66,11 @@ func (p *Pipeline) dataCacheStage(endian types.Endianness) {
 	if p.executionLatch != nil {
 		switch p.executionLatch.op {
 		case LW:
-			result := types.DoubleWord(p.bus.ReadWord(endian, types.Word(p.executionLatch.result)))
+			fmt.Println(p.executionLatch.result)
+			data := p.bus.ReadWord(endian, types.Word(p.executionLatch.result))
+			fmt.Println(data)
+			// In 64-bit mode, the loaded word is sign-extended to 64 bits.
+			result := types.DoubleWord(types.SWord(data))
 			p.dataCacheLatch = newDataChacheOutput(p.executionLatch.op, p.executionLatch.dest, result)
 		default:
 			p.dataCacheLatch = p.executionLatch.toDataChacheOutput()

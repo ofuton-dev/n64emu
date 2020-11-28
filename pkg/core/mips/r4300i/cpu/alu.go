@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"fmt"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 )
@@ -19,6 +20,7 @@ func (o *aluOutput) toDataChacheOutput() *dataCacheOutput {
 	}
 }
 
+// Op is operation kind
 type Op types.HalfWord
 
 const (
@@ -389,6 +391,7 @@ func nor(gpr *reg.GPR, inst *InstR) *aluOutput {
 // register base.
 func lw(gpr *reg.GPR, inst *InstI) *aluOutput {
 	addr := types.DoubleWord(types.SDoubleWord(gpr.Read(inst.Rs)) + types.SDoubleWord(types.SHalfWord(inst.Immediate)))
+	fmt.Println(inst, addr)
 	return &aluOutput{
 		op:     LW,
 		dest:   inst.Rt,

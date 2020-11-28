@@ -18,22 +18,23 @@ type CPU struct {
 	fcr0     types.Word       // 32-bit floating-point Implementation/Revision register, FCR0
 	fcr31    types.Word       // 32-bit floating-point Control/Status register, FCR31
 	bus      bus.Bus          // Bus accessor
-	pipeline Pipeline
+	pipeline *Pipeline
 }
 
 // NewCPU is CPU constructor
 func NewCPU(bus bus.Bus) *CPU {
 	// TODO: Please check default value after power up.
 	cpu := &CPU{
-		gpr:   reg.NewGPR(),
-		fpr:   reg.NewFGR(),
-		pc:    0,
-		hi:    0,
-		lo:    0,
-		llBit: false,
-		fcr0:  0,
-		fcr31: 0,
-		bus:   bus,
+		gpr:      reg.NewGPR(),
+		fpr:      reg.NewFGR(),
+		pc:       0,
+		hi:       0,
+		lo:       0,
+		llBit:    false,
+		fcr0:     0,
+		fcr31:    0,
+		bus:      bus,
+		pipeline: NewPipeline(bus),
 	}
 	return cpu
 }
