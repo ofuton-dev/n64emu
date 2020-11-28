@@ -250,10 +250,10 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 		util.TODO("LDL")
 	case 0x1B:
 		util.TODO("LDR")
-	case 0x20:
-		util.TODO("LB")
-	case 0x21:
-		util.TODO("LH")
+	case 0x20: // LB
+		return lb(&c.gpr, &instI)
+	case 0x21: // LH
+		return lh(&c.gpr, &instI)
 	case 0x22:
 		util.TODO("LWL")
 	case 0x23: // LW

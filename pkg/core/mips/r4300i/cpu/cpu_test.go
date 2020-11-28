@@ -13,6 +13,7 @@ type MockBus struct {
 }
 
 func (b *MockBus) WriteByte(e types.Endianness, addr types.Word, data types.Byte) {
+	b.SetMemory(addr, []byte{data})
 }
 
 func (b *MockBus) WriteHalfWord(e types.Endianness, addr types.Word, data types.HalfWord) {

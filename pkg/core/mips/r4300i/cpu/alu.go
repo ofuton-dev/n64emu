@@ -1,7 +1,6 @@
 package cpu
 
 import (
-	"fmt"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 )
@@ -386,12 +385,35 @@ func nor(gpr *reg.GPR, inst *InstR) *aluOutput {
 	}
 }
 
+// LB rt, offset (base)
+// Generates an address by adding a sign-extended offset to the contents of
+// register base.
+func lb(gpr *reg.GPR, inst *InstI) *aluOutput {
+	addr := types.DoubleWord(types.SDoubleWord(gpr.Read(inst.Rs)) + types.SDoubleWord(types.SHalfWord(inst.Immediate)))
+	return &aluOutput{
+		op:     LB,
+		dest:   inst.Rt,
+		result: addr,
+	}
+}
+
+// LH rt, offset (base)
+// Generates an address by adding a sign-extended offset to the contents of
+// register base
+func lh(gpr *reg.GPR, inst *InstI) *aluOutput {
+	addr := types.DoubleWord(types.SDoubleWord(gpr.Read(inst.Rs)) + types.SDoubleWord(types.SHalfWord(inst.Immediate)))
+	return &aluOutput{
+		op:     LH,
+		dest:   inst.Rt,
+		result: addr,
+	}
+}
+
 // LW rt, offset (base)
 // Generates an address by adding a sign-extended offset to the contents of
 // register base.
 func lw(gpr *reg.GPR, inst *InstI) *aluOutput {
 	addr := types.DoubleWord(types.SDoubleWord(gpr.Read(inst.Rs)) + types.SDoubleWord(types.SHalfWord(inst.Immediate)))
-	fmt.Println(inst, addr)
 	return &aluOutput{
 		op:     LW,
 		dest:   inst.Rt,
