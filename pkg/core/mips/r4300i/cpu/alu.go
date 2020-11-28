@@ -6,14 +6,137 @@ import (
 )
 
 type aluOutput struct {
+	op     Op
 	dest   types.Byte
 	result types.DoubleWord
 }
+
+type Op types.HalfWord
+
+const (
+	SLL Op = iota
+	SRL
+	SRA
+	SLLV
+	SLV
+	SRLV
+	SRAV
+	JR
+	JALR
+	BREAK
+	SYNC
+	MFHI
+	MTHI
+	MFLO
+	MTLO
+	DSLLV
+	DSRLV
+	DSRAV
+	MULT
+	MULTU
+	DIV
+	DIVU
+	DMULT
+	DMULTU
+	DDIV
+	DDIVU
+	ADD
+	ADDU
+	SUB
+	SUBU
+	AND
+	OR
+	XOR
+	NOR
+	SLT
+	SLTU
+	DADD
+	DADDU
+	DSUB
+	DSUBU
+	TEQ
+	DSLL
+	DSRL
+	DSRA
+	DSLL32
+	DSRL32
+	DSRA32
+	BLTZ
+	BGEZ
+	BLTZL
+	BGEZL
+	TGEI
+	TGEIU
+	TLTI
+	TLTIU
+	TEQI
+	TNEI
+	BLTZAL
+	BGEZAL
+	BLTZALL
+	BGEZALL
+	J
+	JAL
+	BEQ
+	BNE
+	BLEZ
+	BGTZ
+	ADDI
+	ADDIU
+	SLTI
+	SLTIU
+	ANDI
+	ORI
+	XORI
+	LUI
+	COP0
+	COP1
+	COP2
+	BEQL
+	BNEL
+	BLEZL
+	BGTZL
+	DADDI
+	DADDIU
+	LDL
+	LDR
+	LB
+	LH
+	LWL
+	LW
+	LBU
+	LHU
+	LWR
+	LWU
+	SB
+	SH
+	SWL
+	SW
+	SDL
+	SDR
+	SWR
+	CACHE
+	LL
+	LWC1
+	LWC2
+	LLD
+	LDC1
+	LDC2
+	LD
+	SC
+	SWC1
+	SWC2
+	SCD
+	SDC1
+	SDC2
+	SD
+)
 
 // SLL rd, rt, sa
 // The contents of general purpose register rt are shifted left by sa bits, inserting zeros into the low-order bits.
 func sll(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     SLL,
 		dest:   inst.Rd,
 		result: types.DoubleWord((int32(gpr.Read(inst.Rt)) << inst.Sa)),
 	}
@@ -23,6 +146,7 @@ func sll(gpr *reg.GPR, inst *InstR) *aluOutput {
 // The contents of general purpose register rt are shifted right by sa bits, inserting zeros into the high-order bits.
 func srl(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     SRL,
 		dest:   inst.Rd,
 		result: types.DoubleWord((gpr.Read(inst.Rt)) >> inst.Sa),
 	}
@@ -32,6 +156,7 @@ func srl(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt sa bits to the right, and sign-extends the high- order bits.
 func sra(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     SRA,
 		dest:   inst.Rd,
 		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> inst.Sa),
 	}
@@ -41,6 +166,7 @@ func sra(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the left and inserts 0 to the low-order bits.
 func sllv(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     SLLV,
 		dest:   inst.Rd,
 		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) << (inst.Rs & 0x1F)),
 	}
@@ -50,6 +176,7 @@ func sllv(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the right, and inserts 0 to the high-order bits.
 func srlv(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     SRLV,
 		dest:   inst.Rd,
 		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> (inst.Rs & 0x1F)),
 	}
@@ -59,6 +186,7 @@ func srlv(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the right and sign-extends the high-order bits.
 func srav(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     SRAV,
 		dest:   inst.Rd,
 		result: types.DoubleWord(int32(gpr.Read(inst.Rt)) >> (inst.Rs & 0x1F)),
 	}
@@ -79,6 +207,7 @@ func jalr(pc *types.DoubleWord, gpr *reg.GPR, inst *InstR) *aluOutput {
 	result := *pc + 8
 	*pc = gpr.Read(inst.Rs)
 	return &aluOutput{
+		op:     JALR,
 		dest:   inst.Rd,
 		result: result,
 	}
@@ -88,6 +217,7 @@ func jalr(pc *types.DoubleWord, gpr *reg.GPR, inst *InstR) *aluOutput {
 // Transfers the contents of special register HI to register rd.
 func mfhi(hi types.DoubleWord, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     MFHI,
 		dest:   inst.Rd,
 		result: hi,
 	}
@@ -97,6 +227,7 @@ func mfhi(hi types.DoubleWord, inst *InstR) *aluOutput {
 // Transfers the contents of special register LO to register rd.
 func mflo(lo types.DoubleWord, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     MFLO,
 		dest:   inst.Rd,
 		result: lo,
 	}
@@ -122,6 +253,7 @@ func mtlo(gpr *reg.GPR, lo *types.DoubleWord, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the left, and inserts 0 to the low-order bits.
 func dsllv(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     DSLLV,
 		dest:   inst.Rd,
 		result: types.DoubleWord((gpr.Read(inst.Rt)) << (inst.Rs & 0x3F)),
 	}
@@ -131,6 +263,7 @@ func dsllv(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the right, and inserts 0 to the higher bits.
 func dsrlv(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     DSRLV,
 		dest:   inst.Rd,
 		result: types.DoubleWord((gpr.Read(inst.Rt)) >> (inst.Rs & 0x3F)),
 	}
@@ -140,6 +273,7 @@ func dsrlv(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Shifts the contents of register rt to the right, and sign-extends the high-order bits.
 func dsrav(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     DSRAV,
 		dest:   inst.Rd,
 		result: types.DoubleWord(int64(gpr.Read(inst.Rt)) >> (inst.Rs & 0x3F)),
 	}
@@ -203,6 +337,7 @@ func divu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR)
 // register rd.
 func or(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     OR,
 		dest:   inst.Rd,
 		result: types.DoubleWord(gpr.Read(inst.Rs) | gpr.Read(inst.Rt)),
 	}
@@ -213,6 +348,7 @@ func or(gpr *reg.GPR, inst *InstR) *aluOutput {
 // register rd.
 func and(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     AND,
 		dest:   inst.Rd,
 		result: types.DoubleWord(gpr.Read(inst.Rs) & gpr.Read(inst.Rt)),
 	}
@@ -223,6 +359,7 @@ func and(gpr *reg.GPR, inst *InstR) *aluOutput {
 // result to register rd.
 func xor(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     XOR,
 		dest:   inst.Rd,
 		result: types.DoubleWord(gpr.Read(inst.Rs) ^ gpr.Read(inst.Rt)),
 	}
@@ -233,7 +370,20 @@ func xor(gpr *reg.GPR, inst *InstR) *aluOutput {
 // register rd
 func nor(gpr *reg.GPR, inst *InstR) *aluOutput {
 	return &aluOutput{
+		op:     NOR,
 		dest:   inst.Rd,
 		result: ^(types.DoubleWord(gpr.Read(inst.Rs) | gpr.Read(inst.Rt))),
+	}
+}
+
+// LW rt, offset (base)
+// Generates an address by adding a sign-extended offset to the contents of
+// register base.
+func lw(gpr *reg.GPR, inst *InstI) *aluOutput {
+	addr := types.DoubleWord(types.SDoubleWord(gpr.Read(inst.Rs)) + types.SDoubleWord(types.SHalfWord(inst.Immediate)))
+	return &aluOutput{
+		op:     LW,
+		dest:   inst.Rt,
+		result: addr,
 	}
 }

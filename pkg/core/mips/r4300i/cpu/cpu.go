@@ -65,6 +65,9 @@ func (c *CPU) RunUntil(cycle types.Word) {
 
 func (c *CPU) execute(opcode types.Word) *aluOutput {
 	op := GetOp(opcode)
+
+	instI := DecodeI(opcode)
+
 	switch op {
 	// R type instructions
 	// SPECIAL
@@ -166,7 +169,6 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 		}
 		// TODO: map other instructions
 	case 0x01:
-		instI := DecodeI(opcode)
 		switch instI.Rt {
 		case 0x00:
 			util.TODO("BLTZ")
@@ -253,8 +255,8 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 		util.TODO("LH")
 	case 0x22:
 		util.TODO("LWL")
-	case 0x23:
-		util.TODO("LW")
+	case 0x23: // LW
+		return lw(&c.gpr, &instI)
 	case 0x24:
 		util.TODO("LBU")
 	case 0x25:
