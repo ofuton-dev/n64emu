@@ -11,6 +11,14 @@ type aluOutput struct {
 	result types.DoubleWord
 }
 
+func (o *aluOutput) toDataChacheOutput() *dataCacheOutput {
+	return &dataCacheOutput{
+		op:     o.op,
+		dest:   o.dest,
+		result: o.result,
+	}
+}
+
 type Op types.HalfWord
 
 const (

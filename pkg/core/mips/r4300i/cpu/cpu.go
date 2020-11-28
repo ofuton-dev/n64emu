@@ -52,7 +52,7 @@ func (c *CPU) fetch(addr types.DoubleWord) types.Word {
 func (c *CPU) Step() {
 	// TODO: We need to consider about `pipline`.
 	//       Implement later here.
-	c.pipeline.step(&c.pc, &c.gpr, c.execute, c.fetch)
+	c.pipeline.step(c.endian(), &c.pc, &c.gpr, c.execute, c.fetch)
 }
 
 // RunUntil runs CPU until specified cycles
