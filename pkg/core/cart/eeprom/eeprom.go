@@ -1,4 +1,4 @@
-package ctrlpak
+package eeprom
 
 import (
 	"n64emu/pkg/core/common/nvmem"
