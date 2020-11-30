@@ -100,3 +100,5 @@ func (e *EEPROM) Run(cmd joybus.CommandType, txBuf, rxBuf []types.Byte) joybus.C
 		return joybus.UnableToTransferDatas
 	}
 }
+
+// TODO: import/export function

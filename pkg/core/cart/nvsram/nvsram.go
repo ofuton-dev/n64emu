@@ -6,10 +6,12 @@ import (
 
 const (
 	// SRAM or FlashRAM: [0x0800_0000 - 0x0800_ffff]
-	RamSize = 0x1000
+	RAMSize = 0x1000
 )
 
 // Battery-Backed RAM or FlashRAM
 type NVSRAM struct {
-	Data [RamSize]types.Byte
+	Data [RAMSize]types.Byte
 }
+
+// TODO: import/export function
