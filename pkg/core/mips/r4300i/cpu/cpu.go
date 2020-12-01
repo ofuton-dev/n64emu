@@ -18,22 +18,23 @@ type CPU struct {
 	fcr0     types.Word       // 32-bit floating-point Implementation/Revision register, FCR0
 	fcr31    types.Word       // 32-bit floating-point Control/Status register, FCR31
 	bus      bus.Bus          // Bus accessor
-	pipeline Pipeline
+	pipeline *Pipeline
 }
 
 // NewCPU is CPU constructor
 func NewCPU(bus bus.Bus) *CPU {
 	// TODO: Please check default value after power up.
 	cpu := &CPU{
-		gpr:   reg.NewGPR(),
-		fpr:   reg.NewFGR(),
-		pc:    0,
-		hi:    0,
-		lo:    0,
-		llBit: false,
-		fcr0:  0,
-		fcr31: 0,
-		bus:   bus,
+		gpr:      reg.NewGPR(),
+		fpr:      reg.NewFGR(),
+		pc:       0,
+		hi:       0,
+		lo:       0,
+		llBit:    false,
+		fcr0:     0,
+		fcr31:    0,
+		bus:      bus,
+		pipeline: NewPipeline(bus),
 	}
 	return cpu
 }
@@ -52,7 +53,7 @@ func (c *CPU) fetch(addr types.DoubleWord) types.Word {
 func (c *CPU) Step() {
 	// TODO: We need to consider about `pipline`.
 	//       Implement later here.
-	c.pipeline.step(&c.pc, &c.gpr, c.execute, c.fetch)
+	c.pipeline.step(c.endian(), &c.pc, &c.gpr, c.execute, c.fetch)
 }
 
 // RunUntil runs CPU until specified cycles
@@ -65,6 +66,9 @@ func (c *CPU) RunUntil(cycle types.Word) {
 
 func (c *CPU) execute(opcode types.Word) *aluOutput {
 	op := GetOp(opcode)
+
+	instI := DecodeI(opcode)
+
 	switch op {
 	// R type instructions
 	// SPECIAL
@@ -166,7 +170,6 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 		}
 		// TODO: map other instructions
 	case 0x01:
-		instI := DecodeI(opcode)
 		switch instI.Rt {
 		case 0x00:
 			util.TODO("BLTZ")
@@ -247,14 +250,14 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 		util.TODO("LDL")
 	case 0x1B:
 		util.TODO("LDR")
-	case 0x20:
-		util.TODO("LB")
-	case 0x21:
-		util.TODO("LH")
+	case 0x20: // LB
+		return lb(&c.gpr, &instI)
+	case 0x21: // LH
+		return lh(&c.gpr, &instI)
 	case 0x22:
 		util.TODO("LWL")
-	case 0x23:
-		util.TODO("LW")
+	case 0x23: // LW
+		return lw(&c.gpr, &instI)
 	case 0x24:
 		util.TODO("LBU")
 	case 0x25:

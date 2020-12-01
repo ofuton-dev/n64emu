@@ -13,12 +13,17 @@ type MockBus struct {
 }
 
 func (b *MockBus) WriteByte(e types.Endianness, addr types.Word, data types.Byte) {
+	b.SetMemory(addr, []byte{data})
 }
 
 func (b *MockBus) WriteHalfWord(e types.Endianness, addr types.Word, data types.HalfWord) {
 }
 
 func (b *MockBus) WriteWord(e types.Endianness, addr types.Word, data types.Word) {
+	// TODO:  For now, fixed by BIG endian
+	bytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(bytes, data)
+	b.SetMemory(addr, bytes)
 }
 
 func (b *MockBus) WriteDoubleWord(e types.Endianness, addr types.Word, data types.DoubleWord) {
@@ -135,4 +140,14 @@ func TestOR(t *testing.T) {
 	cpu.gpr.Write(2, 0x5555555500000000)
 	cpu.RunUntil(5)
 	assert.Equal(types.DoubleWord(0x55555555AAAAAAAA), cpu.gpr.Read(3), "should ORed value stored")
+}
+
+func TestLW(t *testing.T) {
+	assert := assert.New(t)
+	// LW base=1, rt=3, offset=0x0100
+	cpu, bus := setupCPU(0, beOpcodes2bytes(0x8C230100))
+	cpu.gpr.Write(1, 0x0000000000000004)
+	bus.WriteWord(types.Big, 0x00000104, 0x5555AAAA)
+	cpu.RunUntil(5)
+	assert.Equal(types.DoubleWord(0x000000005555AAAA), cpu.gpr.Read(3), "should specified word data loaded")
 }

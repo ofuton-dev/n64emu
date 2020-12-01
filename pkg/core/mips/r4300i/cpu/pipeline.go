@@ -13,7 +13,23 @@ type Pipeline struct {
 	registerFetchReady         bool
 	registerFetchLatch         *types.Word
 	executionLatch             *aluOutput
-	dataCacheLatch             *aluOutput
+	dataCacheLatch             *dataCacheOutput
+}
+
+type dataCacheOutput struct {
+	op     Op
+	dest   types.Byte
+	result types.DoubleWord
+}
+
+func newDataChacheOutput(op Op,
+	dest types.Byte,
+	result types.DoubleWord) *dataCacheOutput {
+	return &dataCacheOutput{
+		op:     op,
+		dest:   dest,
+		result: result,
+	}
 }
 
 // NewPipeline is Pipeline constructor
@@ -24,11 +40,11 @@ func NewPipeline(bus bus.Bus) *Pipeline {
 }
 
 // TODO: Refactor later.
-func (p *Pipeline) step(pc *types.DoubleWord, gpr *reg.GPR, execute func(types.Word) *aluOutput, fetch func(addr types.DoubleWord) types.Word) {
+func (p *Pipeline) step(endian types.Endianness, pc *types.DoubleWord, gpr *reg.GPR, execute func(types.Word) *aluOutput, fetch func(addr types.DoubleWord) types.Word) {
 	// TODO: We need to consider about pipeline exception, branch delay, load delay and etc...
 	p.writeBackStage(gpr)
 
-	p.dataCacheStage()
+	p.dataCacheStage(endian)
 
 	p.executionStage(execute)
 
@@ -45,8 +61,26 @@ func (p *Pipeline) writeBackStage(gpr *reg.GPR) {
 }
 
 // DC - Data Cache Fetch
-func (p *Pipeline) dataCacheStage() {
-	p.dataCacheLatch = p.executionLatch
+func (p *Pipeline) dataCacheStage(endian types.Endianness) {
+	if p.executionLatch != nil {
+		switch p.executionLatch.op {
+		case LB:
+			data := p.bus.ReadWord(endian, types.Word(p.executionLatch.result))
+			result := types.DoubleWord(types.SByte(data))
+			p.dataCacheLatch = newDataChacheOutput(p.executionLatch.op, p.executionLatch.dest, result)
+		case LH:
+			data := p.bus.ReadWord(endian, types.Word(p.executionLatch.result))
+			result := types.DoubleWord(types.SHalfWord(data))
+			p.dataCacheLatch = newDataChacheOutput(p.executionLatch.op, p.executionLatch.dest, result)
+		case LW:
+			data := p.bus.ReadWord(endian, types.Word(p.executionLatch.result))
+			// In 64-bit mode, the loaded word is sign-extended to 64 bits.
+			result := types.DoubleWord(types.SWord(data))
+			p.dataCacheLatch = newDataChacheOutput(p.executionLatch.op, p.executionLatch.dest, result)
+		default:
+			p.dataCacheLatch = p.executionLatch.toDataChacheOutput()
+		}
+	}
 }
 
 // EX - Execution
