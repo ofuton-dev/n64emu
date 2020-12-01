@@ -99,7 +99,16 @@ func (e *EEPROM) Run(cmd joybus.CommandType, txBuf, rxBuf []types.Byte) joybus.C
 	case joybus.ReadEEPROM:
 		return e.ROM.Read(blockOffset, rxBuf)
 	case joybus.WriteEEPROM:
-		return e.ROM.Write(blockOffset, txBuf[TxHeaderOffset:]) // skip header offset
+		ret := e.ROM.Write(blockOffset, txBuf[TxHeaderOffset:]) // skip header offset
+		// set error byte
+		if len(rxBuf) > 0 {
+			if ret == joybus.Success {
+				rxBuf[0] = 0x00
+			} else {
+				rxBuf[0] = 0x01 // TODO: Check the type of error byte
+			}
+		}
+		return ret
 
 	default:
 		assert.Assert(false, "Unsupported command")
