@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"n64emu/pkg/core"
-	"n64emu/pkg/core/cart/rom"
+	"n64emu/pkg/core/cart"
 	"os"
 )
 
@@ -34,15 +34,17 @@ func Run() int {
 		return exitCodeOK
 	}
 
-	path := flag.Arg(0)
-	r, err := rom.NewRom(path)
+	romPath := flag.Arg(0)
+	eepromPath := flag.Arg(1)
+	nvsramPath := flag.Arg(2)
+	c, err := cart.NewCart(romPath, eepromPath, nvsramPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to read ROM data: %s\n", err)
 		return exitCodeError
 	}
 
 	// test code
-	fmt.Printf("ROM ImageName='%s'\n", r.ImageName)
+	fmt.Printf("ROM ImageName='%s'\n", c.ROM.ImageName)
 	core.Hello()
 
 	return exitCodeOK

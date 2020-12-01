@@ -25,7 +25,7 @@ Cartridge ROM Header format:
 
 */
 
-package rom
+package cart
 
 import (
 	"encoding/binary"
@@ -55,15 +55,15 @@ type MediaFormatFirstByte byte
 
 const (
 	// Cartridge
-	Cart MediaFormatFirstByte = 'N'
+	Cartridge MediaFormatFirstByte = 'N'
 	// 64DD
 	Dd MediaFormatFirstByte = 'D'
 	// cartridge part of expandable game
-	CartEx MediaFormatFirstByte = 'C'
+	CartridgeEx MediaFormatFirstByte = 'C'
 	// 64DD expansion for cart
 	DdEx MediaFormatFirstByte = 'E'
 	// Aleck64 Cartridge
-	ACart MediaFormatFirstByte = 'Z'
+	ACartridge MediaFormatFirstByte = 'Z'
 )
 
 type CountryCode byte

@@ -1,4 +1,4 @@
-package eeprom
+package cart
 
 import (
 	"n64emu/pkg/core/joybus"
