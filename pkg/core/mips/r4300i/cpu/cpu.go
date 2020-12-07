@@ -121,10 +121,10 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			return dmult(&c.gpr, &c.hi, &c.lo, &instR)
 		case 0x1D: // DMULTU
 			return dmultu(&c.gpr, &c.hi, &c.lo, &instR)
-		case 0x1E:
-			util.TODO("DDIV")
-		case 0x1F:
-			util.TODO("DDIVU")
+		case 0x1E: // DDIV
+			return ddiv(&c.gpr, &c.hi, &c.lo, &instR)
+		case 0x1F: // DDIVU
+			return ddivu(&c.gpr, &c.hi, &c.lo, &instR)
 		case 0x20:
 			util.TODO("ADD")
 		case 0x21:

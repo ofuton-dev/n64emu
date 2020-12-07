@@ -354,12 +354,41 @@ func dmult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR
 	return nil
 }
 
+// DMULTU rs, rt
+// Multiplies the contents of register rs by the contents of register rt as an
+// unsigned integer.
 func dmultu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
 	rt := new(big.Int).SetUint64(gpr.Read(inst.Rt))
 	rs := new(big.Int).SetUint64(gpr.Read(inst.Rs))
 	result := new(big.Int).Mul(rt, rs)
 	*hi = result.Rsh(result, 64).Uint64()
 	*lo = result.Uint64()
+	return nil
+}
+
+// DDIV rs, rt
+// Divides the contents of register rs by the contents of register rt.
+// The operand is treated as a signed integer.
+// Stores the 64-bit quotient to special register LO, and the 64-bit remainder to
+// special register HI.
+func ddiv(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rt := types.SDoubleWord(gpr.Read(inst.Rt))
+	rs := types.SDoubleWord(gpr.Read(inst.Rs))
+	*lo = types.DoubleWord(rs / rt)
+	*hi = types.DoubleWord(rs % rt)
+	return nil
+}
+
+// DDIVU rs, rt
+// Divides the contents of register rs by the contents of register rt.
+// The operand is treated as an unsigned integer.
+// Stores the 64-bit quotient to special register LO, and the 64-bit remainder to
+// special register HI.
+func ddivu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rt := gpr.Read(inst.Rt)
+	rs := gpr.Read(inst.Rs)
+	*lo = rs / rt
+	*hi = rs % rt
 	return nil
 }
 
