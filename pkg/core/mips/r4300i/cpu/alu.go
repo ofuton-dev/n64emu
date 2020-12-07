@@ -354,6 +354,15 @@ func dmult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR
 	return nil
 }
 
+func dmultu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rt := new(big.Int).SetUint64(gpr.Read(inst.Rt))
+	rs := new(big.Int).SetUint64(gpr.Read(inst.Rs))
+	result := new(big.Int).Mul(rt, rs)
+	*hi = result.Rsh(result, 64).Uint64()
+	*lo = result.Uint64()
+	return nil
+}
+
 // OR rd, rs, rt
 // ORs the contents of registers rs and rt in bit units, and stores the result to
 // register rd.
