@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"math/big"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 )
@@ -338,6 +339,18 @@ func divu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR)
 	rt := types.Word(gpr.Read(inst.Rt))
 	*hi = types.DoubleWord(rs / rt)
 	*lo = types.DoubleWord(rs % rt)
+	return nil
+}
+
+// DMULT rs, rt
+// Multiplies the contents of register rs by the contents of register rt as a signed
+// integer.
+func dmult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rt := big.NewInt(types.SDoubleWord(gpr.Read(inst.Rt)))
+	rs := big.NewInt(types.SDoubleWord(gpr.Read(inst.Rs)))
+	result := new(big.Int).Mul(rt, rs)
+	*hi = result.Rsh(result, 64).Uint64()
+	*lo = result.Uint64()
 	return nil
 }
 
