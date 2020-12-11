@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"math"
 	"math/big"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
@@ -392,17 +393,53 @@ func ddivu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR
 	return nil
 }
 
+// ADD rd, rs, rt
+// The contents of general purpose register rs and the contents of general purpose
+// register rt are added to store the result in general purpose register rd. In 64-bit
+// mode, the operands must be sign-extended, 32-bit values.
+func add(gpr *reg.GPR, inst *InstR) *aluOutput {
+	rt := types.SWord(gpr.Read(inst.Rt))
+	rs := types.SWord(gpr.Read(inst.Rs))
+	if isI32AddOverflow(rs, rt) {
+		return nil
+	}
+	result := types.SDoubleWord(rs + rt)
+	return &aluOutput{
+		op:     ADD,
+		dest:   inst.Rd,
+		result: types.DoubleWord(result),
+	}
+}
+
 // ADDU rd, rs, rt
 // Adds the contents of register rs and rt, and stores (sign-extends in the 64-bit
 // mode) the 32-bit result to register rd.
 // In 64-bit mode, the operands
 // must be sign-extended, 32-bit values.
 func addu(gpr *reg.GPR, inst *InstR) *aluOutput {
-	rt := types.SDoubleWord(gpr.Read(inst.Rt))
-	rs := types.SDoubleWord(gpr.Read(inst.Rs))
-	result := types.SDoubleWord(types.SWord(rs) + types.SWord(rt))
+	rt := types.SWord(gpr.Read(inst.Rt))
+	rs := types.SWord(gpr.Read(inst.Rs))
+	result := types.SDoubleWord(rs + rt)
 	return &aluOutput{
 		op:     ADDU,
+		dest:   inst.Rd,
+		result: types.DoubleWord(result),
+	}
+}
+
+// SUB rd, rs, rt
+// Subtracts the contents of register rs from register rt, and stores (sign-extends
+// in the 64-bit mode) the result to register rd.
+// Generates an exception if an integer overflow occurs.
+func sub(gpr *reg.GPR, inst *InstR) *aluOutput {
+	rt := types.SWord(gpr.Read(inst.Rt))
+	rs := types.SWord(gpr.Read(inst.Rs))
+	if isI32AddOverflow(rs, -rt) {
+		return nil
+	}
+	result := types.SDoubleWord(rs - rt)
+	return &aluOutput{
+		op:     SUB,
 		dest:   inst.Rd,
 		result: types.DoubleWord(result),
 	}
@@ -412,9 +449,9 @@ func addu(gpr *reg.GPR, inst *InstR) *aluOutput {
 // Subtracts the contents of register rt from register rs, and stores (sign-extends
 // in the 64-bit mode) the 32-bit result to register rd.
 func subu(gpr *reg.GPR, inst *InstR) *aluOutput {
-	rt := types.SDoubleWord(gpr.Read(inst.Rt))
-	rs := types.SDoubleWord(gpr.Read(inst.Rs))
-	result := types.SDoubleWord(types.SWord(rs) - types.SWord(rt))
+	rt := types.SWord(gpr.Read(inst.Rt))
+	rs := types.SWord(gpr.Read(inst.Rs))
+	result := types.SDoubleWord(rs - rt)
 	return &aluOutput{
 		op:     SUBU,
 		dest:   inst.Rd,
@@ -500,4 +537,13 @@ func lw(gpr *reg.GPR, inst *InstI) *aluOutput {
 		dest:   inst.Rt,
 		result: addr,
 	}
+}
+
+func isI32AddOverflow(l, r types.SWord) bool {
+	if r > 0 && l > math.MaxInt32-r {
+		return true
+	} else if l < math.MinInt32-r {
+		return true
+	}
+	return false
 }
