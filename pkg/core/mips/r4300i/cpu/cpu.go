@@ -153,10 +153,10 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			return xor(&c.gpr, &instR)
 		case 0x27: // NOR
 			return nor(&c.gpr, &instR)
-		case 0x2A:
-			util.TODO("SLT")
-		case 0x2B:
-			util.TODO("SLTU")
+		case 0x2A: // SLT
+			return slt(&c.gpr, &instR)
+		case 0x2B: // SLTU
+			return sltu(&c.gpr, &instR)
 		case 0x2C:
 			util.TODO("DADD")
 		case 0x2D:

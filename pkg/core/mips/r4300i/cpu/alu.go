@@ -503,6 +503,42 @@ func nor(gpr *reg.GPR, inst *InstR) *aluOutput {
 	}
 }
 
+// SLT rd, rs, rt
+// Compares the contents of registers rs and rt as signed integers.
+// If the contents of register rs are less than those of rt, stores 1 to register rd;
+// otherwise, stores 0 to rd.
+func slt(gpr *reg.GPR, inst *InstR) *aluOutput {
+	var result types.DoubleWord
+	rt := types.SWord(gpr.Read(inst.Rt))
+	rs := types.SWord(gpr.Read(inst.Rs))
+	if rs < rt {
+		result = 1
+	}
+	return &aluOutput{
+		op:     SLT,
+		dest:   inst.Rd,
+		result: result,
+	}
+}
+
+// SLTU rd, rs, rt
+// Compares the contents of registers rs and rt as unsigned integers.
+// If the contents of register rs are less than those of rt, stores 1 to register rd;
+// otherwise, stores 0 to rd.
+func sltu(gpr *reg.GPR, inst *InstR) *aluOutput {
+	var result types.DoubleWord
+	rt := types.Word(gpr.Read(inst.Rt))
+	rs := types.Word(gpr.Read(inst.Rs))
+	if rs < rt {
+		result = 1
+	}
+	return &aluOutput{
+		op:     SLTU,
+		dest:   inst.Rd,
+		result: result,
+	}
+}
+
 // LB rt, offset (base)
 // Generates an address by adding a sign-extended offset to the contents of
 // register base.
