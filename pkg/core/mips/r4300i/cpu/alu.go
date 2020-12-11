@@ -392,6 +392,36 @@ func ddivu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR
 	return nil
 }
 
+// ADDU rd, rs, rt
+// Adds the contents of register rs and rt, and stores (sign-extends in the 64-bit
+// mode) the 32-bit result to register rd.
+// In 64-bit mode, the operands
+// must be sign-extended, 32-bit values.
+func addu(gpr *reg.GPR, inst *InstR) *aluOutput {
+	rt := types.SDoubleWord(gpr.Read(inst.Rt))
+	rs := types.SDoubleWord(gpr.Read(inst.Rs))
+	result := types.SDoubleWord(types.SWord(rs) + types.SWord(rt))
+	return &aluOutput{
+		op:     ADDU,
+		dest:   inst.Rd,
+		result: types.DoubleWord(result),
+	}
+}
+
+// SUBU rd, rs, rt
+// Subtracts the contents of register rt from register rs, and stores (sign-extends
+// in the 64-bit mode) the 32-bit result to register rd.
+func subu(gpr *reg.GPR, inst *InstR) *aluOutput {
+	rt := types.SDoubleWord(gpr.Read(inst.Rt))
+	rs := types.SDoubleWord(gpr.Read(inst.Rs))
+	result := types.SDoubleWord(types.SWord(rs) - types.SWord(rt))
+	return &aluOutput{
+		op:     SUBU,
+		dest:   inst.Rd,
+		result: types.DoubleWord(result),
+	}
+}
+
 // OR rd, rs, rt
 // ORs the contents of registers rs and rt in bit units, and stores the result to
 // register rd.

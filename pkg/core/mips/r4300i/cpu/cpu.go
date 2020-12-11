@@ -127,12 +127,12 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			return ddivu(&c.gpr, &c.hi, &c.lo, &instR)
 		case 0x20:
 			util.TODO("ADD")
-		case 0x21:
-			util.TODO("ADDU")
+		case 0x21: // ADDU
+			return addu(&c.gpr, &instR)
 		case 0x22:
 			util.TODO("SUB")
-		case 0x23:
-			util.TODO("SUBU")
+		case 0x23: // SUBU
+			return subu(&c.gpr, &instR)
 		case 0x24: // AND
 			return and(&c.gpr, &instR)
 		case 0x25: // OR
