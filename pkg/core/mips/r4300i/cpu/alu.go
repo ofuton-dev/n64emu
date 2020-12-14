@@ -1,6 +1,8 @@
 package cpu
 
 import (
+	"math"
+	"math/big"
 	"n64emu/pkg/core/mips/r4300i/reg"
 	"n64emu/pkg/types"
 )
@@ -341,6 +343,122 @@ func divu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR)
 	return nil
 }
 
+// DMULT rs, rt
+// Multiplies the contents of register rs by the contents of register rt as a signed
+// integer.
+func dmult(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rt := big.NewInt(types.SDoubleWord(gpr.Read(inst.Rt)))
+	rs := big.NewInt(types.SDoubleWord(gpr.Read(inst.Rs)))
+	result := new(big.Int).Mul(rt, rs)
+	*hi = result.Rsh(result, 64).Uint64()
+	*lo = result.Uint64()
+	return nil
+}
+
+// DMULTU rs, rt
+// Multiplies the contents of register rs by the contents of register rt as an
+// unsigned integer.
+func dmultu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rt := new(big.Int).SetUint64(gpr.Read(inst.Rt))
+	rs := new(big.Int).SetUint64(gpr.Read(inst.Rs))
+	result := new(big.Int).Mul(rt, rs)
+	*hi = result.Rsh(result, 64).Uint64()
+	*lo = result.Uint64()
+	return nil
+}
+
+// DDIV rs, rt
+// Divides the contents of register rs by the contents of register rt.
+// The operand is treated as a signed integer.
+// Stores the 64-bit quotient to special register LO, and the 64-bit remainder to
+// special register HI.
+func ddiv(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rt := types.SDoubleWord(gpr.Read(inst.Rt))
+	rs := types.SDoubleWord(gpr.Read(inst.Rs))
+	*lo = types.DoubleWord(rs / rt)
+	*hi = types.DoubleWord(rs % rt)
+	return nil
+}
+
+// DDIVU rs, rt
+// Divides the contents of register rs by the contents of register rt.
+// The operand is treated as an unsigned integer.
+// Stores the 64-bit quotient to special register LO, and the 64-bit remainder to
+// special register HI.
+func ddivu(gpr *reg.GPR, hi *types.DoubleWord, lo *types.DoubleWord, inst *InstR) *aluOutput {
+	rt := gpr.Read(inst.Rt)
+	rs := gpr.Read(inst.Rs)
+	*lo = rs / rt
+	*hi = rs % rt
+	return nil
+}
+
+// ADD rd, rs, rt
+// The contents of general purpose register rs and the contents of general purpose
+// register rt are added to store the result in general purpose register rd. In 64-bit
+// mode, the operands must be sign-extended, 32-bit values.
+func add(gpr *reg.GPR, inst *InstR) *aluOutput {
+	rt := types.SWord(gpr.Read(inst.Rt))
+	rs := types.SWord(gpr.Read(inst.Rs))
+	if isI32AddOverflow(rs, rt) {
+		return nil
+	}
+	result := types.SDoubleWord(rs + rt)
+	return &aluOutput{
+		op:     ADD,
+		dest:   inst.Rd,
+		result: types.DoubleWord(result),
+	}
+}
+
+// ADDU rd, rs, rt
+// Adds the contents of register rs and rt, and stores (sign-extends in the 64-bit
+// mode) the 32-bit result to register rd.
+// In 64-bit mode, the operands
+// must be sign-extended, 32-bit values.
+func addu(gpr *reg.GPR, inst *InstR) *aluOutput {
+	rt := types.SWord(gpr.Read(inst.Rt))
+	rs := types.SWord(gpr.Read(inst.Rs))
+	result := types.SDoubleWord(rs + rt)
+	return &aluOutput{
+		op:     ADDU,
+		dest:   inst.Rd,
+		result: types.DoubleWord(result),
+	}
+}
+
+// SUB rd, rs, rt
+// Subtracts the contents of register rs from register rt, and stores (sign-extends
+// in the 64-bit mode) the result to register rd.
+// Generates an exception if an integer overflow occurs.
+func sub(gpr *reg.GPR, inst *InstR) *aluOutput {
+	rt := types.SWord(gpr.Read(inst.Rt))
+	rs := types.SWord(gpr.Read(inst.Rs))
+	if isI32AddOverflow(rs, -rt) {
+		return nil
+	}
+	result := types.SDoubleWord(rs - rt)
+	return &aluOutput{
+		op:     SUB,
+		dest:   inst.Rd,
+		result: types.DoubleWord(result),
+	}
+}
+
+// SUBU rd, rs, rt
+// Subtracts the contents of register rt from register rs, and stores (sign-extends
+// in the 64-bit mode) the 32-bit result to register rd.
+func subu(gpr *reg.GPR, inst *InstR) *aluOutput {
+	rt := types.SWord(gpr.Read(inst.Rt))
+	rs := types.SWord(gpr.Read(inst.Rs))
+	result := types.SDoubleWord(rs - rt)
+	return &aluOutput{
+		op:     SUBU,
+		dest:   inst.Rd,
+		result: types.DoubleWord(result),
+	}
+}
+
 // OR rd, rs, rt
 // ORs the contents of registers rs and rt in bit units, and stores the result to
 // register rd.
@@ -385,6 +503,42 @@ func nor(gpr *reg.GPR, inst *InstR) *aluOutput {
 	}
 }
 
+// SLT rd, rs, rt
+// Compares the contents of registers rs and rt as signed integers.
+// If the contents of register rs are less than those of rt, stores 1 to register rd;
+// otherwise, stores 0 to rd.
+func slt(gpr *reg.GPR, inst *InstR) *aluOutput {
+	var result types.DoubleWord
+	rt := types.SWord(gpr.Read(inst.Rt))
+	rs := types.SWord(gpr.Read(inst.Rs))
+	if rs < rt {
+		result = 1
+	}
+	return &aluOutput{
+		op:     SLT,
+		dest:   inst.Rd,
+		result: result,
+	}
+}
+
+// SLTU rd, rs, rt
+// Compares the contents of registers rs and rt as unsigned integers.
+// If the contents of register rs are less than those of rt, stores 1 to register rd;
+// otherwise, stores 0 to rd.
+func sltu(gpr *reg.GPR, inst *InstR) *aluOutput {
+	var result types.DoubleWord
+	rt := types.Word(gpr.Read(inst.Rt))
+	rs := types.Word(gpr.Read(inst.Rs))
+	if rs < rt {
+		result = 1
+	}
+	return &aluOutput{
+		op:     SLTU,
+		dest:   inst.Rd,
+		result: result,
+	}
+}
+
 // LB rt, offset (base)
 // Generates an address by adding a sign-extended offset to the contents of
 // register base.
@@ -419,4 +573,13 @@ func lw(gpr *reg.GPR, inst *InstI) *aluOutput {
 		dest:   inst.Rt,
 		result: addr,
 	}
+}
+
+func isI32AddOverflow(l, r types.SWord) bool {
+	if r > 0 && l > math.MaxInt32-r {
+		return true
+	} else if l < math.MinInt32-r {
+		return true
+	}
+	return false
 }

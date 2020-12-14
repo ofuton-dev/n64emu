@@ -64,6 +64,10 @@ func (c *CPU) RunUntil(cycle types.Word) {
 	}
 }
 
+func (c *CPU) trapIntegerOverflow() {
+	util.TODO("Please implement integer overflow excrption.")
+}
+
 func (c *CPU) execute(opcode types.Word) *aluOutput {
 	op := GetOp(opcode)
 
@@ -117,22 +121,30 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			return div(&c.gpr, &c.hi, &c.lo, &instR)
 		case 0x1B: // DIVU
 			return divu(&c.gpr, &c.hi, &c.lo, &instR)
-		case 0x1C:
-			util.TODO("DMULT")
-		case 0x1D:
-			util.TODO("DMULTU")
-		case 0x1E:
-			util.TODO("DDIV")
-		case 0x1F:
-			util.TODO("DDIVU")
-		case 0x20:
-			util.TODO("ADD")
-		case 0x21:
-			util.TODO("ADDU")
+		case 0x1C: // DMULT
+			return dmult(&c.gpr, &c.hi, &c.lo, &instR)
+		case 0x1D: // DMULTU
+			return dmultu(&c.gpr, &c.hi, &c.lo, &instR)
+		case 0x1E: // DDIV
+			return ddiv(&c.gpr, &c.hi, &c.lo, &instR)
+		case 0x1F: // DDIVU
+			return ddivu(&c.gpr, &c.hi, &c.lo, &instR)
+		case 0x20: // ADD
+			output := add(&c.gpr, &instR)
+			if output != nil {
+				c.trapIntegerOverflow()
+			}
+			return output
+		case 0x21: // ADDU
+			return addu(&c.gpr, &instR)
 		case 0x22:
-			util.TODO("SUB")
-		case 0x23:
-			util.TODO("SUBU")
+			output := sub(&c.gpr, &instR)
+			if output != nil {
+				c.trapIntegerOverflow()
+			}
+			return output
+		case 0x23: // SUBU
+			return subu(&c.gpr, &instR)
 		case 0x24: // AND
 			return and(&c.gpr, &instR)
 		case 0x25: // OR
@@ -141,10 +153,10 @@ func (c *CPU) execute(opcode types.Word) *aluOutput {
 			return xor(&c.gpr, &instR)
 		case 0x27: // NOR
 			return nor(&c.gpr, &instR)
-		case 0x2A:
-			util.TODO("SLT")
-		case 0x2B:
-			util.TODO("SLTU")
+		case 0x2A: // SLT
+			return slt(&c.gpr, &instR)
+		case 0x2B: // SLTU
+			return sltu(&c.gpr, &instR)
 		case 0x2C:
 			util.TODO("DADD")
 		case 0x2D:
